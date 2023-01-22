@@ -1,11 +1,11 @@
     Version:  $VERSION
-    This script will do all the operations needed to enable PXE boot of an
-    iso image of a bootable linux cd  passed as the first argument.
+    This script will do all the operations needed to enable PXE boot from an
+    iso image of a bootable linux cd,  passed as the first argument.
     
     1- After performing various checks, it will add it to ${FSTAB} 
     using as the mount point a  "Fantasy Name" either passed as a second argument 
     or created from the name of the iso image.
-    If not mounted already, the image is mounted afterwards.
+    If the iso image is not  already mounted, it is mounted.
     
     2- After performing various checks, the mount point is added to ${EXPORTS} and exported.
          
