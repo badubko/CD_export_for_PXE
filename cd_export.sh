@@ -9,13 +9,13 @@ show_usage ()
 	echo  -e  "\nUSAGE: $0  cd_to_export   [fantasy_name_to_use_for_mounting]\n"
 	cat <<!FINIS
     Version:  $VERSION
-    This script will do all the operations needed to enable PXE boot of an
-    iso image of a bootable linux cd  passed as the first argument.
+    This script will do all the operations needed to enable PXE boot from an
+    iso image of a bootable linux cd,  passed as the first argument.
     
     1- After performing various checks, it will add it to ${FSTAB} 
     using as the mount point a  "Fantasy Name" either passed as a second argument 
     or created from the name of the iso image.
-    If not mounted already, the image is mounted afterwards.
+    If the iso image is not  already mounted, it is mounted.
     
     2- After performing various checks, the mount point is added to ${EXPORTS} and exported.
          
@@ -193,7 +193,7 @@ case ${ACTION} in
 		  exit
 		  ;;
 esac
-exit
+
 
 
 mount | grep   -q  "${CD_TO_EXPORT}" 
@@ -261,6 +261,7 @@ grep  -q "${FANTASY_NAME}"  < /etc/exports
 then
    # Check if the line is not a comment
    grep -q  -e  "^#.*${FANTASY_NAME}"  < ${EXPORTS}
+   if [  $?  != 0 ] 
    then
 		echo "${FANTASY_NAME}" " Already present in ${EXPORTS} and not a comment"
    else
@@ -295,11 +296,19 @@ MENU_STRING1="APPEND  root=/dev/nfs boot=casper netboot=nfs ip=dhcp "
 MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
 MENU_STRING3="initrd=${FANTASY_NAME}/casper/initrd  no-quiet splash toram ---"
 
+# Check if the menu entry is already present in menu.cfg and not a comment
 
-#
-echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-echo  "KERNEL ${FANTASY_NAME}/casper/vmlinuz" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-echo  "${MENU_STRING1}${MENU_STRING2}${MENU_STRING3}"  >>${LOCATION_OF_MENU}${MENU_F_NAME}
+egrep  -v  -e  "^#.*" < ${LOCATION_OF_MENU}${MENU_F_NAME} | grep -q  -e  "LABEL ${FANTASY_NAME}"  
+if [ $? != 0 ]
+then
+	# Add the lines to menu
+	echo "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}"
+	echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+	echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+	echo  "KERNEL ${FANTASY_NAME}/casper/vmlinuz" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+	echo  "${MENU_STRING1}${MENU_STRING2}${MENU_STRING3}"  >>${LOCATION_OF_MENU}${MENU_F_NAME}
+else
+	echo "Lines already present in:  ${LOCATION_OF_MENU}${MENU_F_NAME}"
+fi	
  
 exit
