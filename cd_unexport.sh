@@ -82,10 +82,11 @@ then
 	echo " Mount name: ${MOUNT_NAME}"
 	
 else
+    echo "${CD_TO_UN_EXPORT}" " is NOT mounted..."
 	MOUNTED="FALSE"
 fi
   
-
+# Select all non comment lines | Select lines containing CD_TO_UN_EXPORT | subsitute spaces by only one space
 LINE_IN_FSTAB=$( egrep  -v  -e  "^#.*" < ${FSTAB} | egrep  -e  "${CD_TO_UN_EXPORT}" | sed  -r -e 's/ +/ /g')
 	
 if [[ -z ${LINE_IN_FSTAB} ]] 
