@@ -112,7 +112,7 @@ echo "Fantasy Name to be used: " $FANTASY_NAME
 # Check if this image is already present in ${FSTAB}
 
 LINE_COUNT=$( grep  -c "${CD_TO_EXPORT}"  < ${FSTAB} ) 
-TOTAL_NC_LINES=$( egrep  -v  -e  "^#.*" < ${FSTAB} | grep -c  -e  "${CD_TO_EXPORT}" )
+TOTAL_NC_LINES=$( grep  -v  -e  "^#.*" < ${FSTAB} | grep -c  -e  "${CD_TO_EXPORT}" )
 TOTAL_C_LINES=$( egrep    -e  "^#.*" < ${FSTAB} | grep -c  -e  "${CD_TO_EXPORT}" )
 
 echo $LINE_COUNT     $TOTAL_NC_LINES      $TOTAL_C_LINES
