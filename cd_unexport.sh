@@ -46,6 +46,21 @@ delete_line_from_exports ()
 	
 delete_line_from_menu ()
 {
+	#Just in case: Find which FANTASY name was used in menu...
+	
+		
+	# This will delete comment and no-comment lines containing pattern and +2 lines
+	# The sequence is
+	# LABEL
+	# KERNEL
+	# APPEND
+	
+	# This should be refined to cover all alternatives, ie, comment lines in the middle...
+	
+	for NAME in  ${MOUNT_NAME_FSTAB} ${MOUNT_NAME}     
+	sed -i  -r   "/${NAME}/,+2d"  "${LOCATION_OF_MENU}${MENU_F_NAME}" 
+	
+
 	return
 }
 
