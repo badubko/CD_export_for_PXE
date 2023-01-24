@@ -43,7 +43,7 @@ MENU_F_NAME="menu.cfg"
 MOUNT_OPTIONS_STRING='udf,iso9660 user,loop 0 0'
 EXPORT_OPTIONS_STRING='*(ro,sync,no_wdelay,insecure_locks,no_root_squash,insecure,no_subtree_check)'
 
-STRING_TO_CLEAR_IN_FAN_NAME="-desktop-amd64"
+STRING_TO_CLEAR_IN_FAN_NAME=("-desktop" "-amd64")
 
 INITRD="/casper/initrd"
 VMLINUZ="/casper/vmlinuz" 
@@ -98,7 +98,10 @@ then
 
    FANTASY_NAME=${FANTASY_NAME%.*}
    
-   FANTASY_NAME=${FANTASY_NAME/${STRING_TO_CLEAR_IN_FAN_NAME}/}
+   for STRING_TO_CLEAR in ${STRING_TO_CLEAR_IN_FAN_NAME[@]}
+   do
+		FANTASY_NAME=${FANTASY_NAME/${STRING_TO_CLEAR}/}
+   done
    
 else
    # Make sure that Fantasy name doesn't contain any directories...
