@@ -43,7 +43,7 @@ MENU_F_NAME="menu.cfg"
 MOUNT_OPTIONS_STRING='udf,iso9660 user,loop 0 0'
 EXPORT_OPTIONS_STRING='*(ro,sync,no_wdelay,insecure_locks,no_root_squash,insecure,no_subtree_check)'
 
-STRING_TO_CLEAR_IN_FAN_NAME=("-desktop" "-amd64")
+STRING_TO_CLEAR_IN_FAN_NAME=("-desktop" "_desktop" "-amd64" "_amd64" )
 
 INITRD="/casper/initrd"
 VMLINUZ="/casper/vmlinuz" 
