@@ -31,19 +31,23 @@ return
 
 delete_line_from_fstab ()
 {
-	echo  sed -i  -r -e   "/${MOUNT_NAME_FSTAB}/d"  "${FSTAB}" 
+	sed -i  -r -e   "/${MOUNT_NAME_FSTAB}/d"  "${FSTAB}" 
+	echo "Line containing ${MOUNT_NAME_FSTAB} deleted from ${FSTAB}"
 	return
 }
 
 umount_cd ()
 {
-echo umount ${CD_TO_UN_EXPORT}
-return
+    umount ${CD_TO_UN_EXPORT}
+    echo "Umounted ${CD_TO_UN_EXPORT}"
+    return
 }
 
 unexport ()
 {
-	echo exportfs -r
+	exportfs -r
+	
+	echo "Unexported:  " "${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}"
 	return
 }
 
@@ -51,7 +55,13 @@ delete_line_from_exports ()
 {
 	# As ${WHERE_TO_MOUNT} contains multiple "/"
 	# the "/" character is replaced by "|" as pattern delimiter, but should be escaped with "\ "at the beggining.
-	echo sed -i  -r  -e  "\|${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}|d"  "${EXPORTS}" 
+	# sed -i  -r  -e  "\|${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}|d"  "${EXPORTS}" 
+	
+	sed -i  -r  -e  "\|${MOUNT_NAME_FSTAB}|d"  "${EXPORTS}" 
+	
+	echo "Line containing "
+	echo "${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}"
+	echo "was deleted from ${EXPORTS}"
 	
 	return
 }
@@ -69,7 +79,7 @@ delete_line_from_menu ()
 	# This should be refined to cover all alternatives, ie, comment lines in the middle...
 	
 	# for NAME in  ${MOUNT_NAME_FSTAB} ${MOUNT_NAME}     
-	echo  sed -i  -r  -e "/${MOUNT_NAME_FSTAB}/,+2d"  "${LOCATION_OF_MENU}${MENU_F_NAME}" 
+	sed -i  -r  -e "/${MOUNT_NAME_FSTAB}/,+2d"  "${LOCATION_OF_MENU}${MENU_F_NAME}" 
 
 	return
 }
@@ -182,6 +192,9 @@ MOUNTED_NOT_IN_FSTAB )
 		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
 		umount ${CD_TO_UN_EXPORT}
 		delete_line_from_menu
+		# Improve this temporary fix...
+		# We don't have an entry in  fstab, so we use the mount point name we have got from mount command.
+		MOUNT_NAME_FSTAB="${MOUNT_NAME}"
 		delete_line_from_exports
 		unexport
 		umount_cd
