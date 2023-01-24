@@ -189,7 +189,7 @@ case ${ACTION} in
 		  exit
           ;;
 *)
-		  echo "Non exitent option"
+		  echo "Non existent option"
 		  exit
 		  ;;
 esac
