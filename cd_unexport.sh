@@ -31,16 +31,22 @@ return
 
 delete_line_from_fstab ()
 {
+	sed -i  -r -e   "/${MOUNT_NAME_FSTAB}/d"  "${FSTAB}" 
 	return
 }
 
 unexport ()
 {
+	exportfs -r
 	return
 }
 
 delete_line_from_exports ()
 {
+	# As ${WHERE_TO_MOUNT} contains multiple "/"
+	# the "/" character is replaced by "|" as pattern delimiter, but should be escaped with "\ "at the beggining.
+	sed -i  -r  -e  "\|${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}|d"  "${EXPORTS}" 
+	
 	return
 }
 	
@@ -48,7 +54,6 @@ delete_line_from_menu ()
 {
 	#Just in case: Find which FANTASY name was used in menu...
 	
-		
 	# This will delete comment and no-comment lines containing pattern and +2 lines
 	# The sequence is
 	# LABEL
@@ -57,9 +62,8 @@ delete_line_from_menu ()
 	
 	# This should be refined to cover all alternatives, ie, comment lines in the middle...
 	
-	for NAME in  ${MOUNT_NAME_FSTAB} ${MOUNT_NAME}     
-	sed -i  -r   "/${NAME}/,+2d"  "${LOCATION_OF_MENU}${MENU_F_NAME}" 
-	
+	# for NAME in  ${MOUNT_NAME_FSTAB} ${MOUNT_NAME}     
+	sed -i  -r  -e "/${MOUNT_NAME_FSTAB}/,+2d"  "${LOCATION_OF_MENU}${MENU_F_NAME}" 
 
 	return
 }
@@ -177,14 +181,11 @@ MOUNTED_NOT_IN_FSTAB )
 		;;
 MOUNTED_NAMES_DIFFER)		
 		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
-		echo "Mount name  is not the same as mount point in ${FSTAB} Correct this..."
-		umount ${CD_TO_UN_EXPORT}
-		delete_line_from_menu
-		delete_line_from_exports
-		unexport
+		echo "Mount name  is not the same as mount point in ${FSTAB} Fix this manually..."
+		exit
 		;;		
 * )
-		echo "What is this? ${MOUNT_STATUS}_${FSTAB_STATUS}"
+		echo "What is this Macaya? ${MOUNT_STATUS}_${FSTAB_STATUS}"
 		;;
 esac
 
@@ -200,7 +201,12 @@ esac
 
 # Delete from fstab
 
-
+		#echo "Mount name  is not the same as mount point in ${FSTAB} Correct this..."
+		#umount ${CD_TO_UN_EXPORT}
+		#delete_line_from_menu
+		#delete_line_from_exports
+		#unexport
+		#delete_line_from_fstab
 
 
 
