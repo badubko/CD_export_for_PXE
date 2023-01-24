@@ -31,13 +31,19 @@ return
 
 delete_line_from_fstab ()
 {
-	sed -i  -r -e   "/${MOUNT_NAME_FSTAB}/d"  "${FSTAB}" 
+	echo  sed -i  -r -e   "/${MOUNT_NAME_FSTAB}/d"  "${FSTAB}" 
 	return
+}
+
+umount_cd ()
+{
+echo umount ${CD_TO_UN_EXPORT}
+return
 }
 
 unexport ()
 {
-	exportfs -r
+	echo exportfs -r
 	return
 }
 
@@ -45,7 +51,7 @@ delete_line_from_exports ()
 {
 	# As ${WHERE_TO_MOUNT} contains multiple "/"
 	# the "/" character is replaced by "|" as pattern delimiter, but should be escaped with "\ "at the beggining.
-	sed -i  -r  -e  "\|${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}|d"  "${EXPORTS}" 
+	echo sed -i  -r  -e  "\|${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}|d"  "${EXPORTS}" 
 	
 	return
 }
@@ -63,7 +69,7 @@ delete_line_from_menu ()
 	# This should be refined to cover all alternatives, ie, comment lines in the middle...
 	
 	# for NAME in  ${MOUNT_NAME_FSTAB} ${MOUNT_NAME}     
-	sed -i  -r  -e "/${MOUNT_NAME_FSTAB}/,+2d"  "${LOCATION_OF_MENU}${MENU_F_NAME}" 
+	echo  sed -i  -r  -e "/${MOUNT_NAME_FSTAB}/,+2d"  "${LOCATION_OF_MENU}${MENU_F_NAME}" 
 
 	return
 }
@@ -166,10 +172,10 @@ NOT_MOUNTED_IN_FSTAB )
 		;;
 MOUNTED_IN_FSTAB )
 		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
-		umount ${CD_TO_UN_EXPORT}
 		delete_line_from_menu
 		delete_line_from_exports
 		unexport
+		umount_cd
 		delete_line_from_fstab
 		;;
 MOUNTED_NOT_IN_FSTAB )		
@@ -178,9 +184,11 @@ MOUNTED_NOT_IN_FSTAB )
 		delete_line_from_menu
 		delete_line_from_exports
 		unexport
+		umount_cd
 		;;
 MOUNTED_NAMES_DIFFER)		
 		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
+		echo "${MOUNT_NAME_FSTAB}" "   "  "${MOUNT_NAME}" 
 		echo "Mount name  is not the same as mount point in ${FSTAB} Fix this manually..."
 		exit
 		;;		
