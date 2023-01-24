@@ -118,7 +118,7 @@ LINE_COUNT=$( grep  -c "${CD_TO_EXPORT}"  < ${FSTAB} )
 TOTAL_NC_LINES=$( grep  -v  -e  "^#.*" < ${FSTAB} | grep -c  -e  "${CD_TO_EXPORT}" )
 TOTAL_C_LINES=$( egrep    -e  "^#.*" < ${FSTAB} | grep -c  -e  "${CD_TO_EXPORT}" )
 
-echo $LINE_COUNT     $TOTAL_NC_LINES      $TOTAL_C_LINES
+# echo $LINE_COUNT     $TOTAL_NC_LINES      $TOTAL_C_LINES
 
 
 if  [  ${LINE_COUNT} -gt 0 ]
@@ -156,7 +156,7 @@ else
       ACTION="Add"
 fi
 
- echo "$ACTION"
+ echo  "Action: $ACTION"
 
 
 case ${ACTION} in
