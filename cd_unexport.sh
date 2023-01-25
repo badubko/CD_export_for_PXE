@@ -84,6 +84,18 @@ delete_line_from_menu ()
 	return
 }
 
+delete_mount_point()
+{
+	rmdir  "${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}"
+	if [ $? ]
+	then
+		echo "Mount point  ${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB} was removed"
+	else
+	    echo "Error:  ${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB} was NOT removed"
+	fi    
+	return
+}
+
 #----------------------------------------------------------------------------------------------------------------------------------------------
 # main
 #----------------------------------------------------------------------------------------------------------------------------------------------
@@ -157,7 +169,7 @@ else
 
 	echo " Mount name in ${FSTAB}:  ${MOUNT_NAME_FSTAB}"
 		
-	if  [  "${MOUNT_NAME_FSTAB}" != "${MOUNT_NAME}"  ]
+	if  [ ${MOUNT_STATUS} == "MOUNTED"  ]  &&  [ "${MOUNT_NAME_FSTAB}" != "${MOUNT_NAME}" ]
 	then
 			
 			FSTAB_STATUS="NAMES_DIFFER"     
@@ -168,29 +180,27 @@ else
 
 fi
 
+echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
+
 case  "${MOUNT_STATUS}_${FSTAB_STATUS}"  in
 NOT_MOUNTED_NOT_IN_FSTAB )
-		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
 		echo "Nothing to do here..."
 		exit
 		;;
 NOT_MOUNTED_IN_FSTAB )
-		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
 		delete_line_from_menu
 		delete_line_from_exports
 		delete_line_from_fstab
 		;;
 MOUNTED_IN_FSTAB )
-		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
 		delete_line_from_menu
 		delete_line_from_exports
 		unexport
 		umount_cd
 		delete_line_from_fstab
+		delete_mount_point
 		;;
 MOUNTED_NOT_IN_FSTAB )		
-		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
-		
 		delete_line_from_menu
 		# Improve this temporary fix...
 		# We don't have an entry in  fstab, so we use the mount point name we have got from the mount command.
@@ -198,9 +208,9 @@ MOUNTED_NOT_IN_FSTAB )
 		delete_line_from_exports
 		unexport
 		umount_cd
+		delete_mount_point
 		;;
 MOUNTED_NAMES_DIFFER)		
-		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
 		echo "${MOUNT_NAME_FSTAB}" "   "  "${MOUNT_NAME}" 
 		echo "Mount name  is not the same as mount point in ${FSTAB} Fix this manually..."
 		exit
