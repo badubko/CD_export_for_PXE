@@ -98,7 +98,7 @@ MENU_F_NAME="menu.cfg"
 MOUNT_OPTIONS_STRING='udf,iso9660 user,loop 0 0'
 EXPORT_OPTIONS_STRING='*(ro,sync,no_wdelay,insecure_locks,no_root_squash,insecure,no_subtree_check)'
 
-STRING_TO_CLEAR_IN_FAN_NAME="-desktop-amd64"
+STRING_TO_CLEAR_IN_FAN_NAME=("-desktop" "_desktop" "-amd64" "_amd64" )
 
 INITRD="/casper/initrd"
 VMLINUZ="/casper/vmlinuz" 
@@ -190,10 +190,10 @@ MOUNTED_IN_FSTAB )
 		;;
 MOUNTED_NOT_IN_FSTAB )		
 		echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
-		umount ${CD_TO_UN_EXPORT}
+		
 		delete_line_from_menu
 		# Improve this temporary fix...
-		# We don't have an entry in  fstab, so we use the mount point name we have got from mount command.
+		# We don't have an entry in  fstab, so we use the mount point name we have got from the mount command.
 		MOUNT_NAME_FSTAB="${MOUNT_NAME}"
 		delete_line_from_exports
 		unexport
