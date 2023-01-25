@@ -59,9 +59,9 @@ delete_line_from_exports ()
 	
 	sed -i  -r  -e  "\|${MOUNT_NAME_FSTAB}|d"  "${EXPORTS}" 
 	
-	echo "Line containing "
-	echo "${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}"
-	echo "was deleted from ${EXPORTS}"
+	echo "		Line containing "
+	echo "				${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}"
+	echo "		was deleted from ${EXPORTS}"
 	
 	return
 }
@@ -180,7 +180,7 @@ else
 
 fi
 
-echo "${MOUNT_STATUS}_${FSTAB_STATUS}"
+echo "Status:   ${MOUNT_STATUS}_${FSTAB_STATUS}"
 
 case  "${MOUNT_STATUS}_${FSTAB_STATUS}"  in
 NOT_MOUNTED_NOT_IN_FSTAB )
