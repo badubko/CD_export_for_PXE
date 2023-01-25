@@ -27,6 +27,36 @@ show_usage ()
 
 !FINIS
 return
+
+}
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
+write_menu_lines ()
+{
+# Add corresponding lines to PXE boot menu	
+# Strings for the menu entries...  We will need some of this data for this step
+
+MY_SERVER_IP="192.168.1.130"
+MENU_STRING1="APPEND  root=/dev/nfs boot=casper netboot=nfs ip=dhcp "
+MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
+MENU_STRING3="initrd=${FANTASY_NAME}/casper/initrd  no-quiet splash toram ---"
+
+# Check if the menu entry is already present in menu.cfg and not a comment
+if [  ${MENU_LINES_GENERATION} == "WRITE_MENU_LINES" ]
+then
+	egrep  -v  -e  "^#.*" < ${LOCATION_OF_MENU}${MENU_F_NAME} | grep -q  -e  "LABEL ${FANTASY_NAME}"  
+	if [ $? != 0 ]
+	then
+		# Add the lines to menu
+		echo "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}"
+		echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+		echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+		echo  "KERNEL ${FANTASY_NAME}/casper/vmlinuz" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+		echo  "${MENU_STRING1}${MENU_STRING2}${MENU_STRING3}"  >>${LOCATION_OF_MENU}${MENU_F_NAME}
+	else
+		echo "Lines already present in:  ${LOCATION_OF_MENU}${MENU_F_NAME}"
+	fi	
+ fi	
 }
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
@@ -237,8 +267,16 @@ fi
 # kubuntu-18.04.2/casper/vmlinuz
 # kubuntu-18.04.2/casper/initrd 
 
-if  [   ! -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}${VMLINUZ} ]  ||  [  ! -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}${INITRD}  ]
+grep  "debian"  <<< ${FANTASY_NAME}
+
+if  [ $? == 0 ]
 then
+    MENU_LINES_GENERATION="DONT_WRITE_MENU_LINES"
+    echo "Status: ${MENU_LINES_GENERATION}"
+else
+     MENU_LINES_GENERATION="WRITE_MENU_LINES"
+	if  [   ! -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}${VMLINUZ} ]  ||  [  ! -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}${INITRD}  ]
+	then
 		echo "Either "
 		echo "         ${WHERE_TO_MOUNT}${FANTASY_NAME}${VMLINUZ}  "
 		echo "OR"
@@ -252,6 +290,7 @@ then
 		# Deleting the line that contains ${FANTASY_NAME}
 		sed -i -e "/${FANTASY_NAME}/d" ${FSTAB}
 		exit
+	fi	
 fi
 
 
@@ -292,26 +331,10 @@ fi
 
 # Add corresponding lines to PXE boot menu
 
-# Strings for the menu entries...  We will need some of this data for this step
+write_menu_lines
 
-MY_SERVER_IP="192.168.1.130"
-MENU_STRING1="APPEND  root=/dev/nfs boot=casper netboot=nfs ip=dhcp "
-MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-MENU_STRING3="initrd=${FANTASY_NAME}/casper/initrd  no-quiet splash toram ---"
 
-# Check if the menu entry is already present in menu.cfg and not a comment
 
-egrep  -v  -e  "^#.*" < ${LOCATION_OF_MENU}${MENU_F_NAME} | grep -q  -e  "LABEL ${FANTASY_NAME}"  
-if [ $? != 0 ]
-then
-	# Add the lines to menu
-	echo "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}"
-	echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-	echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-	echo  "KERNEL ${FANTASY_NAME}/casper/vmlinuz" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-	echo  "${MENU_STRING1}${MENU_STRING2}${MENU_STRING3}"  >>${LOCATION_OF_MENU}${MENU_F_NAME}
-else
-	echo "Lines already present in:  ${LOCATION_OF_MENU}${MENU_F_NAME}"
-fi	
+
  
 exit
