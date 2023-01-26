@@ -29,17 +29,99 @@ show_usage ()
 return
 
 }
+#----------------------------------------------------------------------------------------------------------------------------------------------
+determine_os_type()
+{
+SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel")
+
+for OS_TYPE in ${SUPPORTED_OS_TYPES[@]}
+do
+	grep  ${OS_TYPE} <<<${CD_TO_EXPORT}
+	if [ $? == 0 ]
+	then
+			MENU_LINES_GENERATION="WRITE_MENU_LINES"
+			return
+	fi
+done
+
+OS_TYPE="other"
+MENU_LINES_GENERATION="DONT_WRITE_MENU_LINES"
+
+return		
+}
+#----------------------------------------------------------------------------------------------------------------------------------------------
+set_menu_strings ()
+{
+MY_SERVER_IP="192.168.1.130"
+
+case  ${OS_TYPE} in
+ubuntu)
+    BOOT_STRING="casper"
+	VMLINUZ_STRING="/casper/vmlinuz"
+	INITRD_STRING="/casper/initrd"
+	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
+	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
+	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	return
+	;;
+debian)
+	return
+	;;
+trisquel)
+	return
+	;;
+other)
+	return
+	;;
+esac
+	
+return
+}
+#----------------------------------------------------------------------------------------------------------------------------------------------
+verify_boot_files_exist_on_target ()
+{
+
+# Verify that mounted CD has required files for booting it.
+# Example:
+# CD mounted as  kubuntu-18.04.2
+# Then 
+# kubuntu-18.04.2/casper/vmlinuz
+# kubuntu-18.04.2/casper/initrd 
+
+
+
+if  [ ${MENU_LINES_GENERATION} ==  "DONT_WRITE_MENU_LINES"  ]
+then
+    echo "Status: ${MENU_LINES_GENERATION}"
+    return
+else
+     if  [   ! -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}${VMLINUZ_STRING} ]  ||  [  ! -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}${INITRD_STRING}  ]
+	then
+		echo "Either "
+		echo "         ${WHERE_TO_MOUNT}${FANTASY_NAME}${VMLINUZ_STRING}  "
+		echo "OR"
+		echo "         ${WHERE_TO_MOUNT}${FANTASY_NAME}${INITRD_STRING}  "
+		echo "Are not present in mounted image"
+		
+	    echo "Umounting image...${CD_TO_EXPORT}"
+	    umount ${CD_TO_EXPORT}
+		
+		echo "Removing line that contains ${FANTASY_NAME} from ${FSTAB}"
+		# Deleting the line that contains ${FANTASY_NAME}
+		sed -i -e "/${FANTASY_NAME}/d" ${FSTAB}
+		exit
+	fi	
+fi
+return
+}
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
 write_menu_lines ()
 {
 # Add corresponding lines to PXE boot menu	
 # Strings for the menu entries...  We will need some of this data for this step
-
-MY_SERVER_IP="192.168.1.130"
-MENU_STRING1="APPEND  root=/dev/nfs boot=casper netboot=nfs ip=dhcp "
-MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-MENU_STRING3="initrd=${FANTASY_NAME}/casper/initrd  no-quiet splash toram ---"
 
 # Check if the menu entry is already present in menu.cfg and not a comment
 if [  ${MENU_LINES_GENERATION} == "WRITE_MENU_LINES" ]
@@ -51,13 +133,20 @@ then
 		echo "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}"
 		echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
 		echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-		echo  "KERNEL ${FANTASY_NAME}/casper/vmlinuz" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+		echo  "KERNEL ${FANTASY_NAME}${VMLINUZ_STRING}" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
 		echo  "${MENU_STRING1}${MENU_STRING2}${MENU_STRING3}"  >>${LOCATION_OF_MENU}${MENU_F_NAME}
 	else
 		echo "Lines already present in:  ${LOCATION_OF_MENU}${MENU_F_NAME}"
 	fi	
- fi	
+ else 
+		echo "Add lines manually"
+ fi
+ return
+ 	
 }
+
+
+
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
 # main
@@ -117,8 +206,10 @@ then
 	exit
 fi
 
+determine_os_type
 
-   
+echo "OS_TYPE is: ${OS_TYPE}"
+ 	  
 if [[ -z "${FANTASY_NAME}" ]]
 then
    echo "Fantasy name not set."
@@ -139,6 +230,7 @@ else
 fi
 
 echo "Fantasy Name to be used: " $FANTASY_NAME
+
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -259,40 +351,8 @@ else
    mount --source  ${CD_TO_EXPORT} -o 'loop'
 fi
 
-#----------------------------------------------------------------------------------------------------------------------------------------------
-# Verify that mounted CD has required files for booting it.
-# Example:
-# CD mounted as  kubuntu-18.04.2
-# Then 
-# kubuntu-18.04.2/casper/vmlinuz
-# kubuntu-18.04.2/casper/initrd 
-
-grep  "debian"  <<< ${FANTASY_NAME}
-
-if  [ $? == 0 ]
-then
-    MENU_LINES_GENERATION="DONT_WRITE_MENU_LINES"
-    echo "Status: ${MENU_LINES_GENERATION}"
-else
-     MENU_LINES_GENERATION="WRITE_MENU_LINES"
-	if  [   ! -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}${VMLINUZ} ]  ||  [  ! -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}${INITRD}  ]
-	then
-		echo "Either "
-		echo "         ${WHERE_TO_MOUNT}${FANTASY_NAME}${VMLINUZ}  "
-		echo "OR"
-		echo "         ${WHERE_TO_MOUNT}${FANTASY_NAME}${INITRD}  "
-		echo "Are not present in mounted image"
-		
-	    echo "Umounting image...${CD_TO_EXPORT}"
-	    umount ${CD_TO_EXPORT}
-		
-		echo "Removing line that contains ${FANTASY_NAME} from ${FSTAB}"
-		# Deleting the line that contains ${FANTASY_NAME}
-		sed -i -e "/${FANTASY_NAME}/d" ${FSTAB}
-		exit
-	fi	
-fi
-
+set_menu_strings
+verify_boot_files_exist_on_target
 
 # Verify if it is already en /etc/exports
 # Use FANTASY_NAME from here onwards
@@ -331,10 +391,13 @@ fi
 
 # Add corresponding lines to PXE boot menu
 
-write_menu_lines
-
-
-
+if  [  ${MENU_LINES_GENERATION} ==  "WRITE_MENU_LINES"  ]
+then
+		write_menu_lines
+else
+		echo "Add menu lines manually"
+fi
+exit
 
  
-exit
+
