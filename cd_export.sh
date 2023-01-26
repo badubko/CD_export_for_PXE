@@ -62,15 +62,19 @@ ubuntu)
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
 	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	
+	verify_boot_files_exist_on_target
+	
 	return
 	;;
+	
 debian)
     BOOT_STRING="live"
 
     if [ -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}/${BOOT_STRING}/vmlinuz* ]
 	then
 		VMLINUZ_STRING=$(ls ${WHERE_TO_MOUNT}${FANTASY_NAME}/${BOOT_STRING}/vmlinuz*)
-		VMLINUZ_STRING=${BOOT_STRING}/${VMLINUZ_STRING##*/}
+		VMLINUZ_STRING="/${BOOT_STRING}/${VMLINUZ_STRING##*/}"
 		echo "vmlinux string: ${VMLINUZ_STRING}"
 	else
 			echo "NO vmlinuz exists"
@@ -80,22 +84,21 @@ debian)
 	if [ -f  ${WHERE_TO_MOUNT}${FANTASY_NAME}/${BOOT_STRING}/initrd* ]
 	then
 		INITRD_STRING=$(ls ${WHERE_TO_MOUNT}${FANTASY_NAME}/${BOOT_STRING}/initrd*)
-		INITRD_STRING=${BOOT_STRING}/${INITRD_STRING##*/}
-		echo "initrd string: ${INITRD_STRING}"
-		exit
+		INITRD_STRING="${INITRD_STRING##*/}"
+			
 	else
 			echo "NO initrd exists"
 			exit
 	fi
-	
-	
 				
-	INITRD_STRING="${BOOT_STRING}/initrd"
+	INITRD_STRING="${BOOT_STRING}/${INITRD_STRING}"
+	echo "initrd string: ${INITRD_STRING}"
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	MENU_STRING3="initrd=${FANTASY_NAME}/${INITRD_STRING}  no-quiet splash toram ---"
 	return
 	;;
+	
 trisquel)
     BOOT_STRING="casper"
 	VMLINUZ_STRING="/casper/vmlinuz"
@@ -103,8 +106,12 @@ trisquel)
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
 	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	
+	verify_boot_files_exist_on_target
+	
 	return
 	;;
+	
 other)
 	return
 	;;
@@ -387,7 +394,7 @@ else
 fi
 
 set_menu_strings
-verify_boot_files_exist_on_target
+# verify_boot_files_exist_on_target
 
 # Verify if it is already en /etc/exports
 # Use FANTASY_NAME from here onwards
