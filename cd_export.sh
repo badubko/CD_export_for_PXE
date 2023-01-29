@@ -32,11 +32,12 @@ return
 #----------------------------------------------------------------------------------------------------------------------------------------------
 determine_os_type()
 {
-SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel")
+SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel" "fedora" "gparted")
 
 for OS_TYPE in ${SUPPORTED_OS_TYPES[@]}
 do
-	grep  ${OS_TYPE} <<<${CD_TO_EXPORT}
+	# Convert CD_TO_EXPORT to lowercase ( to be reviewed... )
+	grep  ${OS_TYPE} <<<${CD_TO_EXPORT,,}
 	if [ $? == 0 ]
 	then
 			MENU_LINES_GENERATION="WRITE_MENU_LINES"
@@ -112,6 +113,30 @@ trisquel)
 	return
 	;;
 	
+fedora)
+    BOOT_STRING="images/pxeboot"
+	VMLINUZ_STRING="/images/pxeboot/vmlinuz"
+	INITRD_STRING="/images/pxeboot/initrd.img"
+	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
+	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
+	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	
+	verify_boot_files_exist_on_target
+	
+	return
+	;;	
+gparted)
+    BOOT_STRING="live"
+	VMLINUZ_STRING="/live/vmlinuz"
+	INITRD_STRING="/live/initrd.img"
+	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
+	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
+	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	
+	verify_boot_files_exist_on_target
+	
+	return
+	;;	
 other)
 	return
 	;;
@@ -172,7 +197,7 @@ then
 	if [ $? != 0 ]
 	then
 		# Add the lines to menu
-		echo "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}"
+		echo  -e "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}\n"
 		echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
 		echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
 		echo  "KERNEL ${FANTASY_NAME}${VMLINUZ_STRING}" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
@@ -327,14 +352,14 @@ case ${ACTION} in
 
 "Add" )
         echo "Adding line to ${FSTAB}"
-		echo -e "#     \n"  >>${FSTAB}
+		echo -e "#"  >>${FSTAB}
 		printf "%s  %s  %s \n "  ${CD_TO_EXPORT}  ${WHERE_TO_MOUNT}${FANTASY_NAME} "${MOUNT_OPTIONS_STRING}" >>${FSTAB}
         ;;
        
 "Inform_Add" )
 		echo "${CD_TO_EXPORT}" " Already present in ${FSTAB} as a comment"
 		echo "Adding line to fstab"
-		echo -e "#     \n"  >>${FSTAB}
+		echo -e "#"  >>${FSTAB}
 		printf "%s  %s  %s \n "  ${CD_TO_EXPORT}  ${WHERE_TO_MOUNT}${FANTASY_NAME} "${MOUNT_OPTIONS_STRING}" >>${FSTAB}
           ;;
 "Verify_Fantasy" )
