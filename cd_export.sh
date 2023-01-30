@@ -29,31 +29,249 @@ show_usage ()
 return
 
 }
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
+basic_checks ()
+{
+if [ ${USER} != "root" ]
+then
+	echo "Must be root to run this script"
+	exit
+fi
+
+if [  -z ${CD_TO_EXPORT}  ]
+then
+	show_usage
+	exit
+fi	
+
+
+if [ ! -f "${CD_TO_EXPORT}" ]
+then
+  echo "$0: requested CD doesn't exist : ${CD_TO_EXPORT}" 
+  exit
+fi
+
+# Verify that it has an    .iso extension
+
+FILE_EXT="${CD_TO_EXPORT##*.}" 	# get extension
+FILE_EXT="${FILE_EXT,,}" 
+
+# echo $CD_TO_EXPORT $FILE_EXT
+
+if [  ${FILE_EXT} != "iso"  ]
+then
+	echo "${CD_TO_EXPORT} is not an iso image"
+	exit
+fi
+
+return
+
+}
+
 #----------------------------------------------------------------------------------------------------------------------------------------------
 determine_os_type()
 {
 SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel" "fedora" "gparted")
 
-for OS_TYPE in ${SUPPORTED_OS_TYPES[@]}
+declare -A SUPPORT_MATRIX
+
+SUPPORT_MATRIX[ubuntu]="SUPPORTED"
+SUPPORT_MATRIX[debian]="SUPPORTED"
+SUPPORT_MATRIX[trisquel]="SUPPORTED"
+SUPPORT_MATRIX[fedora]="DONT_WRITE_MENU_LINES"
+SUPPORT_MATRIX[gparted]="DONT_WRITE_MENU_LINES"
+SUPPORT_MATRIX[haiku]="NOT_SUPPORTED"
+
+for OS_TYPE in "${!SUPPORT_MATRIX[@]}"
 do
 	# Convert CD_TO_EXPORT to lowercase ( to be reviewed... )
 	grep  ${OS_TYPE} <<<${CD_TO_EXPORT,,}
 	if [ $? == 0 ]
 	then
-			MENU_LINES_GENERATION="WRITE_MENU_LINES"
-			return
+			case ${SUPPORT_MATRIX[${OS_TYPE}]} in
+			"SUPPORTED")
+				MENU_LINES_GENERATION="WRITE_MENU_LINES"
+				break
+				;;
+			"DONT_WRITE_MENU_LINES")
+				MENU_LINES_GENERATION="DONT_WRITE_MENU_LINES"
+				break
+				;;
+			"NOT_SUPPORTED")
+				echo "OS_TYPE: ${OS_TYPE} is NOT supported" 
+				exit
+				;;
+			esac
 	fi
 done
 
-OS_TYPE="other"
-MENU_LINES_GENERATION="DONT_WRITE_MENU_LINES"
+echo "OS_TYPE is: ${OS_TYPE}"
 
 return		
 }
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
+set_fantasy_name()
+{
+ 	  
+if [[ -z "${FANTASY_NAME}" ]]
+then
+   echo "Fantasy name not set."
+   # Generate fantasy name from CD's name W/O the directories and the extension.
+   
+   FANTASY_NAME=${CD_TO_EXPORT##*/}
+
+   FANTASY_NAME=${FANTASY_NAME%.*}
+   
+   for STRING_TO_CLEAR in ${STRING_TO_CLEAR_IN_FAN_NAME[@]}
+   do
+		FANTASY_NAME=${FANTASY_NAME/${STRING_TO_CLEAR}/}
+   done
+   
+else
+   # Make sure that Fantasy name doesn't contain any directories...
+      FANTASY_NAME=${FANTASY_NAME##*/}
+fi
+
+echo "Fantasy Name to be used: " $FANTASY_NAME
+
+
+return
+}
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
+
+verify_if_image_present_in_fstab()
+{
+# Check if this image is already present in ${FSTAB}
+
+LINE_COUNT=$( grep  -c "${CD_TO_EXPORT}"  < ${FSTAB} ) 
+TOTAL_NC_LINES=$( grep  -v  -e  "^#.*" < ${FSTAB} | grep -c  -e  "${CD_TO_EXPORT}" )
+TOTAL_C_LINES=$( egrep    -e  "^#.*" < ${FSTAB} | grep -c  -e  "${CD_TO_EXPORT}" )
+
+# echo $LINE_COUNT     $TOTAL_NC_LINES      $TOTAL_C_LINES
+
+
+if  [  ${LINE_COUNT} -gt 0 ]
+then
+	if [  ${LINE_COUNT} -eq 1 ]
+	then
+
+		if  [ ${TOTAL_NC_LINES} -eq 1 ]   &&  [ ${TOTAL_C_LINES} -eq  0 ]
+		then
+			 ACTION="Verify_Fantasy"
+		else
+             ACTION="Inform_Add"
+		fi
+
+    else
+ 
+       if  [ ${TOTAL_NC_LINES}  -ge  2  ] &&  [ ${TOTAL_C_LINES} -eq 0 ] 
+       then
+             ACTION="Inform_Stop"
+       fi
+ 
+       if  [ ${TOTAL_NC_LINES}  -eq  0 ]  &&  [ ${TOTAL_C_LINES} -ge  2 ] 
+       then
+             ACTION="Inform_Add"
+       fi
+
+		if [ ${TOTAL_NC_LINES}  -ge  1 ] &&  [ ${TOTAL_C_LINES} -ge  1 ] 
+       then
+             ACTION="Inform_Stop"
+       fi
+       
+    fi
+        
+else
+      ACTION="Add"
+fi
+
+ echo  "Action: $ACTION"
+
+
+case ${ACTION} in
+
+"Add" )
+        echo "Adding line to ${FSTAB}"
+		echo -e "#"  >>${FSTAB}
+		printf "%s  %s  %s \n "  ${CD_TO_EXPORT}  ${WHERE_TO_MOUNT}${FANTASY_NAME} "${MOUNT_OPTIONS_STRING}" >>${FSTAB}
+        ;;
+       
+"Inform_Add" )
+		echo "${CD_TO_EXPORT}" " Already present in ${FSTAB} as a comment"
+		echo "Adding line to fstab"
+		echo -e "#"  >>${FSTAB}
+		printf "%s  %s  %s \n "  ${CD_TO_EXPORT}  ${WHERE_TO_MOUNT}${FANTASY_NAME} "${MOUNT_OPTIONS_STRING}" >>${FSTAB}
+          ;;
+"Verify_Fantasy" )
+        echo "${CD_TO_EXPORT}" " Already present in ${FSTAB} and not a comment"
+		echo "Checking if FANTASY_NAME is the same as in ${FSTAB}..."
+		LINE_IN_FSTAB=$( egrep  -v  -e  "^#.*" < ${FSTAB} | egrep  -e  "${CD_TO_EXPORT}" | sed  -r -e 's/ +/ /g')
+		MOUNT_NAME_FSTAB=$( cut -d " " -f 2 <<<${LINE_IN_FSTAB} )
+
+		# echo ${MOUNT_NAME_FSTAB}
+		if  [  "${MOUNT_NAME_FSTAB}" != ${WHERE_TO_MOUNT}${FANTASY_NAME}  ]
+		then
+				echo "Fantasy name  is not the same as mount point in ${FSTAB} Correct this..."
+		        exit
+		fi        
+          ;;   
+"Inform_Stop" )
+		  echo "${CD_TO_EXPORT}" " Already present in ${FSTAB} many times"
+		  echo "Correct this..."
+		  exit
+          ;;
+*)
+		  echo "Non existent option"
+		  exit
+		  ;;
+esac
+
+}
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
+verify_and_mount()
+{
+mount | grep   -q  "${CD_TO_EXPORT}" 
+ 
+ if [ $? -eq 0 ]
+then
+   echo "${CD_TO_EXPORT}" " Already mounted..."
+   # Determine Fastasy name used to mount
+	MOUNT_NAME=$( mount | grep   "${CD_TO_EXPORT}" | sed  -r -e 's/ +/ /g' | cut -d " " -f 3 )
+	MOUNT_NAME=${MOUNT_NAME##*/}
+	# echo $MOUNT_NAME
+	if [ ${MOUNT_NAME}  !=  ${FANTASY_NAME} ]
+	then
+	   echo "Mount_name  ${MOUNT_NAME} !=  ${FANTASY_NAME}"
+	   echo "Check this..."
+	   exit
+	 fi
+else
+   echo "Mount it!"  
+   # FInd if target directory exists
+   if [  ! -d ${WHERE_TO_MOUNT}${FANTASY_NAME} ]
+   then
+		mkdir ${WHERE_TO_MOUNT}${FANTASY_NAME}
+		if  [ $? != 0 ]
+		then
+			echo "Target directory creation failed:  ${WHERE_TO_MOUNT}${FANTASY_NAME}" 
+			exit
+		fi	
+	fi		
+   mount --source  ${CD_TO_EXPORT} -o 'loop'
+fi
+	
+return
+}
+
+
 #----------------------------------------------------------------------------------------------------------------------------------------------
 set_menu_strings ()
 {
-MY_SERVER_IP="192.168.1.130"
+MY_SERVER_IP=$( hostname -I )
 
 case  ${OS_TYPE} in
 ubuntu)
@@ -183,244 +401,8 @@ return
 }
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
-
-#----------------------------------------------------------------------------------------------------------------------------------------------
-write_menu_lines ()
+verify_and_export()
 {
-# Add corresponding lines to PXE boot menu	
-# Strings for the menu entries...  We will need some of this data for this step
-
-# Check if the menu entry is already present in menu.cfg and not a comment
-if [  ${MENU_LINES_GENERATION} == "WRITE_MENU_LINES" ]
-then
-	egrep  -v  -e  "^#.*" < ${LOCATION_OF_MENU}${MENU_F_NAME} | grep -q  -e  "LABEL ${FANTASY_NAME}"  
-	if [ $? != 0 ]
-	then
-		# Add the lines to menu
-		echo  -e "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}\n"
-		echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-		echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-		echo  "KERNEL ${FANTASY_NAME}${VMLINUZ_STRING}" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-		echo  "${MENU_STRING1}${MENU_STRING2}${MENU_STRING3}"  >>${LOCATION_OF_MENU}${MENU_F_NAME}
-	else
-		echo "Lines already present in:  ${LOCATION_OF_MENU}${MENU_F_NAME}"
-	fi	
- else 
-		echo "Add lines manually"
- fi
- return
- 	
-}
-
-
-
-
-#----------------------------------------------------------------------------------------------------------------------------------------------
-# main
-#----------------------------------------------------------------------------------------------------------------------------------------------
-
-VERSION="1.1"
-WHERE_TO_MOUNT="/var/lib/tftpboot/"
-FSTAB="/etc/fstab"
-EXPORTS="/etc/exports"
-LOCATION_OF_MENU="/var/lib/tftpboot/debian-installer/amd64/boot-screens/"
-MENU_F_NAME="menu.cfg"
-
-MOUNT_OPTIONS_STRING='udf,iso9660 user,loop 0 0'
-EXPORT_OPTIONS_STRING='*(ro,sync,no_wdelay,insecure_locks,no_root_squash,insecure,no_subtree_check)'
-
-STRING_TO_CLEAR_IN_FAN_NAME=("-desktop" "_desktop" "-amd64" "_amd64" )
-
-INITRD="/casper/initrd"
-VMLINUZ="/casper/vmlinuz" 
-
-#----------------------------------------------------------------------------------------------------------------------------------------------
-
-if [ ${USER} != "root" ]
-then
-	echo "Must be root to run this script"
-	exit
-fi
-
-if [ $# -eq 0 ]
-then
-	show_usage
-	exit
-fi	
-
-CD_TO_EXPORT="${1}"
-
-FANTASY_NAME="${2}"
-   
-
-
-if [ ! -f "${CD_TO_EXPORT}" ]
-then
-  echo "$0: requested CD doesn't exist : ${CD_TO_EXPORT}" 
-  exit
-fi
-
-# Verify that it has an    .iso extension
-
-FILE_EXT="${CD_TO_EXPORT##*.}" 	# get extension
-FILE_EXT="${FILE_EXT,,}" 
-
-# echo $CD_TO_EXPORT $FILE_EXT
-
-if [  ${FILE_EXT} != "iso"  ]
-then
-	echo "${CD_TO_EXPORT} is not an iso image"
-	exit
-fi
-
-determine_os_type
-
-echo "OS_TYPE is: ${OS_TYPE}"
- 	  
-if [[ -z "${FANTASY_NAME}" ]]
-then
-   echo "Fantasy name not set."
-   # Generate fantasy name from CD's name W/O the directories and the extension.
-   
-   FANTASY_NAME=${CD_TO_EXPORT##*/}
-
-   FANTASY_NAME=${FANTASY_NAME%.*}
-   
-   for STRING_TO_CLEAR in ${STRING_TO_CLEAR_IN_FAN_NAME[@]}
-   do
-		FANTASY_NAME=${FANTASY_NAME/${STRING_TO_CLEAR}/}
-   done
-   
-else
-   # Make sure that Fantasy name doesn't contain any directories...
-      FANTASY_NAME=${FANTASY_NAME##*/}
-fi
-
-echo "Fantasy Name to be used: " $FANTASY_NAME
-
-
-#----------------------------------------------------------------------------------------------------------------------------------------------
-
-# Check if this image is already present in ${FSTAB}
-
-LINE_COUNT=$( grep  -c "${CD_TO_EXPORT}"  < ${FSTAB} ) 
-TOTAL_NC_LINES=$( grep  -v  -e  "^#.*" < ${FSTAB} | grep -c  -e  "${CD_TO_EXPORT}" )
-TOTAL_C_LINES=$( egrep    -e  "^#.*" < ${FSTAB} | grep -c  -e  "${CD_TO_EXPORT}" )
-
-# echo $LINE_COUNT     $TOTAL_NC_LINES      $TOTAL_C_LINES
-
-
-if  [  ${LINE_COUNT} -gt 0 ]
-then
-	if [  ${LINE_COUNT} -eq 1 ]
-	then
-
-		if  [ ${TOTAL_NC_LINES} -eq 1 ]   &&  [ ${TOTAL_C_LINES} -eq  0 ]
-		then
-			 ACTION="Verify_Fantasy"
-		else
-             ACTION="Inform_Add"
-		fi
-
-    else
- 
-       if  [ ${TOTAL_NC_LINES}  -ge  2  ] &&  [ ${TOTAL_C_LINES} -eq 0 ] 
-       then
-             ACTION="Inform_Stop"
-       fi
- 
-       if  [ ${TOTAL_NC_LINES}  -eq  0 ]  &&  [ ${TOTAL_C_LINES} -ge  2 ] 
-       then
-             ACTION="Inform_Add"
-       fi
-
-		if [ ${TOTAL_NC_LINES}  -ge  1 ] &&  [ ${TOTAL_C_LINES} -ge  1 ] 
-       then
-             ACTION="Inform_Stop"
-       fi
-       
-    fi
-        
-else
-      ACTION="Add"
-fi
-
- echo  "Action: $ACTION"
-
-
-case ${ACTION} in
-
-"Add" )
-        echo "Adding line to ${FSTAB}"
-		echo -e "#"  >>${FSTAB}
-		printf "%s  %s  %s \n "  ${CD_TO_EXPORT}  ${WHERE_TO_MOUNT}${FANTASY_NAME} "${MOUNT_OPTIONS_STRING}" >>${FSTAB}
-        ;;
-       
-"Inform_Add" )
-		echo "${CD_TO_EXPORT}" " Already present in ${FSTAB} as a comment"
-		echo "Adding line to fstab"
-		echo -e "#"  >>${FSTAB}
-		printf "%s  %s  %s \n "  ${CD_TO_EXPORT}  ${WHERE_TO_MOUNT}${FANTASY_NAME} "${MOUNT_OPTIONS_STRING}" >>${FSTAB}
-          ;;
-"Verify_Fantasy" )
-        echo "${CD_TO_EXPORT}" " Already present in ${FSTAB} and not a comment"
-		echo "Checking if FANTASY_NAME is the same as in ${FSTAB}..."
-		LINE_IN_FSTAB=$( egrep  -v  -e  "^#.*" < ${FSTAB} | egrep  -e  "${CD_TO_EXPORT}" | sed  -r -e 's/ +/ /g')
-		MOUNT_NAME_FSTAB=$( cut -d " " -f 2 <<<${LINE_IN_FSTAB} )
-
-		# echo ${MOUNT_NAME_FSTAB}
-		if  [  "${MOUNT_NAME_FSTAB}" != ${WHERE_TO_MOUNT}${FANTASY_NAME}  ]
-		then
-				echo "Fantasy name  is not the same as mount point in ${FSTAB} Correct this..."
-		        exit
-		fi        
-          ;;   
-"Inform_Stop" )
-		  echo "${CD_TO_EXPORT}" " Already present in ${FSTAB} many times"
-		  echo "Correct this..."
-		  exit
-          ;;
-*)
-		  echo "Non existent option"
-		  exit
-		  ;;
-esac
-
-
-
-mount | grep   -q  "${CD_TO_EXPORT}" 
- 
- if [ $? -eq 0 ]
-then
-   echo "${CD_TO_EXPORT}" " Already mounted..."
-   # Determine Fastasy name used to mount
-	MOUNT_NAME=$( mount | grep   "${CD_TO_EXPORT}" | sed  -r -e 's/ +/ /g' | cut -d " " -f 3 )
-	MOUNT_NAME=${MOUNT_NAME##*/}
-	# echo $MOUNT_NAME
-	if [ ${MOUNT_NAME}  !=  ${FANTASY_NAME} ]
-	then
-	   echo "Mount_name  ${MOUNT_NAME} !=  ${FANTASY_NAME}"
-	   echo "Check this..."
-	   exit
-	 fi
-else
-   echo "Mount it!"  
-   # FInd if target directory exists
-   if [  ! -d ${WHERE_TO_MOUNT}${FANTASY_NAME} ]
-   then
-		mkdir ${WHERE_TO_MOUNT}${FANTASY_NAME}
-		if  [ $? != 0 ]
-		then
-			echo "Target directory creation failed:  ${WHERE_TO_MOUNT}${FANTASY_NAME}" 
-			exit
-		fi	
-	fi		
-   mount --source  ${CD_TO_EXPORT} -o 'loop'
-fi
-
-set_menu_strings
-# verify_boot_files_exist_on_target
-
 # Verify if it is already en /etc/exports
 # Use FANTASY_NAME from here onwards
 
@@ -456,15 +438,85 @@ then
    exportfs -r
 fi
 
+return
+}
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
+write_menu_lines ()
+{
+# Add corresponding lines to PXE boot menu	
+
 # Add corresponding lines to PXE boot menu
 
-if  [  ${MENU_LINES_GENERATION} ==  "WRITE_MENU_LINES"  ]
+if  [  ${MENU_LINES_GENERATION} !=  "WRITE_MENU_LINES"  ]
 then
-		write_menu_lines
-else
 		echo "Add menu lines manually"
+		exit
 fi
-exit
 
+# Check if the menu entry is already present in menu.cfg and not a comment
+if [  ${MENU_LINES_GENERATION} == "WRITE_MENU_LINES" ]
+then
+	egrep  -v  -e  "^#.*" < ${LOCATION_OF_MENU}${MENU_F_NAME} | grep -q  -e  "LABEL ${FANTASY_NAME}"  
+	if [ $? != 0 ]
+	then
+		# Add the lines to menu
+		echo  -e "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}\n"
+		echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+		echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+		echo  "KERNEL ${FANTASY_NAME}${VMLINUZ_STRING}" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+		echo  "${MENU_STRING1}${MENU_STRING2}${MENU_STRING3}"  >>${LOCATION_OF_MENU}${MENU_F_NAME}
+	else
+		echo "Lines already present in:  ${LOCATION_OF_MENU}${MENU_F_NAME}"
+	fi	
+ else 
+		echo "Add lines manually"
+ fi
+ return
+ 	
+}
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
+# main
+#----------------------------------------------------------------------------------------------------------------------------------------------
+
+VERSION="2.0"
+WHERE_TO_MOUNT="/var/lib/tftpboot/"
+FSTAB="/etc/fstab"
+EXPORTS="/etc/exports"
+LOCATION_OF_MENU="/var/lib/tftpboot/debian-installer/amd64/boot-screens/"
+MENU_F_NAME="menu.cfg"
+
+MOUNT_OPTIONS_STRING='udf,iso9660 user,loop 0 0'
+EXPORT_OPTIONS_STRING='*(ro,sync,no_wdelay,insecure_locks,no_root_squash,insecure,no_subtree_check)'
+
+STRING_TO_CLEAR_IN_FAN_NAME=("-desktop" "_desktop" "-amd64" "_amd64" )
+
+INITRD="/casper/initrd"
+VMLINUZ="/casper/vmlinuz" 
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
+
+CD_TO_EXPORT="${1}"
+
+FANTASY_NAME="${2}"
+
+basic_checks
+
+determine_os_type
+
+set_fantasy_name
+
+verify_if_image_present_in_fstab
+
+verify_and_mount
+
+set_menu_strings
+
+verify_and_export
+
+write_menu_lines
+
+exit
  
 
