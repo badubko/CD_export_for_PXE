@@ -9,18 +9,16 @@ show_usage ()
 	echo  -e  "\nUSAGE: $0  cd_to_UNexport   \n"
 	cat <<!FINIS
     Version:  $VERSION
-    This script will do all the operations needed to enable PXE boot from an
+    This script will UNDo all the operations added by cd_export.sh needed to enable PXE boot from an
     iso image of a bootable linux cd,  passed as the first argument.
-    
-    1- After performing various checks, it will add it to ${FSTAB} 
-    using as the mount point a  "Fantasy Name" either passed as a second argument 
-    or created from the name of the iso image.
-    If the iso image is not  already mounted, it is mounted.
-    
-    2- After performing various checks, the mount point is added to ${EXPORTS} and exported.
-         
-    3- Adds the corresponding lines to PXE boot menu
-        ${LOCATION_OF_MENU}${MENU_F_NAME}
+       
+        1- Removes the corresponding lines from PXE boot menu (if there are any)
+			${LOCATION_OF_MENU}${MENU_F_NAME}
+    	2- delete_line_from_exports
+		3- unexport
+		4- umount_cd
+		5- delete_line_from_fstab
+		6- delete_mount_point
         
     Limitations:    
     In this version, the functionaliy of this scipt is limited only to bootable linux images.
@@ -100,7 +98,7 @@ delete_mount_point()
 # main
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
-VERSION="1.1"
+VERSION="2.0"
 WHERE_TO_MOUNT="/var/lib/tftpboot/"
 FSTAB="/etc/fstab"
 EXPORTS="/etc/exports"
