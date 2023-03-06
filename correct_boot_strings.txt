@@ -1,0 +1,7 @@
+LABEL pop_22.04
+KERNEL mnt/pop_22.04/casper/vmlinuz.efi
+APPEND  root=/dev/nfs boot=casper netboot=nfs ip=dhcp  nfsroot=192.168.1.130:/var/lib/tftpboot/mnt/pop_22.04 initrd=mnt/pop_22.04/casper/initrd.gz  no-quiet toram ---
+#
+LABEL ubuntu_mate_22
+KERNEL mnt/ubuntu_mate_22/casper/vmlinuz
+APPEND  root=/dev/nfs boot=casper netboot=nfs ip=dhcp  nfsroot=192.168.1.130:/var/lib/tftpboot/mnt/ubuntu_mate_22 initrd=mnt/ubuntu_mate_22/casper/initrd  no-quiet splash toram ---
