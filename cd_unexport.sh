@@ -99,7 +99,7 @@ delete_mount_point()
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
 VERSION="2.0"
-WHERE_TO_MOUNT="/var/lib/tftpboot/"
+WHERE_TO_MOUNT="/var/lib/tftpboot/mnt/"
 FSTAB="/etc/fstab"
 EXPORTS="/etc/exports"
 LOCATION_OF_MENU="/var/lib/tftpboot/debian-installer/amd64/boot-screens/"
@@ -110,8 +110,8 @@ EXPORT_OPTIONS_STRING='*(ro,sync,no_wdelay,insecure_locks,no_root_squash,insecur
 
 STRING_TO_CLEAR_IN_FAN_NAME=("-desktop" "_desktop" "-amd64" "_amd64" )
 
-INITRD="/casper/initrd"
-VMLINUZ="/casper/vmlinuz" 
+#INITRD="/casper/initrd"
+#VMLINUZ="/casper/vmlinuz" 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
 if [ ${USER} != "root" ]
