@@ -529,7 +529,7 @@ then
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
 VERSION="2.0"
-WHERE_TO_MOUNT="/var/lib/tftpboot/"
+WHERE_TO_MOUNT="/var/lib/tftpboot/mnt/"
 FSTAB="/etc/fstab"
 EXPORTS="/etc/exports"
 LOCATION_OF_MENU="/var/lib/tftpboot/debian-installer/amd64/boot-screens/"
