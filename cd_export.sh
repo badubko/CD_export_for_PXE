@@ -77,10 +77,16 @@ SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel" "fedora" "gparted")
 declare -A SUPPORT_MATRIX
 
 SUPPORT_MATRIX[ubuntu]="SUPPORTED"
+
 SUPPORT_MATRIX[debian]="SUPPORTED"
+
 SUPPORT_MATRIX[trisquel]="SUPPORTED"
+
 SUPPORT_MATRIX[fedora]="DONT_WRITE_MENU_LINES"
-SUPPORT_MATRIX[gparted]="DONT_WRITE_MENU_LINES"
+# SUPPORT_MATRIX[fedora]="SUPPORTED"
+
+SUPPORT_MATRIX[gparted]="SUPPORTED"
+
 SUPPORT_MATRIX[haiku]="NOT_SUPPORTED"
 
 for OS_TYPE in "${!SUPPORT_MATRIX[@]}"
@@ -271,7 +277,12 @@ return
 #----------------------------------------------------------------------------------------------------------------------------------------------
 set_menu_strings ()
 {
-MY_SERVER_IP=$( hostname -I )
+	
+# This command is not reliable for this purpose as it can return more than 1 line...
+# Evaluate other options later...
+
+MY_SERVER_IP="$(hostname -I )"
+MY_SERVER_IP=${MY_SERVER_IP% }
 
 case  ${OS_TYPE} in
 ubuntu)
@@ -349,7 +360,7 @@ gparted)
 	INITRD_STRING="/live/initrd.img"
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  union=overlay  config components no-quiet splash toram ---"
 	
 	verify_boot_files_exist_on_target
 	
