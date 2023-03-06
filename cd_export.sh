@@ -72,7 +72,7 @@ return
 #----------------------------------------------------------------------------------------------------------------------------------------------
 determine_os_type()
 {
-SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel" "fedora" "gparted" "pop_os")
+SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel" "fedora" "gparted" "pop_os" "alma")
 
 declare -A SUPPORT_MATRIX
 
@@ -83,6 +83,8 @@ SUPPORT_MATRIX[debian]="SUPPORTED"
 SUPPORT_MATRIX[trisquel]="SUPPORTED"
 
 SUPPORT_MATRIX[pop_os]="SUPPORTED"
+
+SUPPORT_MATRIX[alma]="NOT_SUPPORTED"
 
 SUPPORT_MATRIX[fedora]="DONT_WRITE_MENU_LINES"
 
@@ -382,9 +384,26 @@ pop_os)
 	return
 	;;
 		
+alma)
+    BOOT_STRING="images/pxeboot"
+	VMLINUZ_STRING="/images/pxeboot/vmlinuz"
+	INITRD_STRING="/images/pxeboot/initrd.img"
+	
+	#BOOT_STRING="isolinux"
+	#VMLINUZ_STRING="/isolinux/vmlinuz"
+	#INITRD_STRING="/isolinux/initrd.img"
 	
 	
-other)
+	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
+	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
+	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	
+	verify_boot_files_exist_on_target
+	
+	return
+	;;	
+	
+*)
 	return
 	;;
 esac
