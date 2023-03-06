@@ -72,7 +72,7 @@ return
 #----------------------------------------------------------------------------------------------------------------------------------------------
 determine_os_type()
 {
-SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel" "fedora" "gparted")
+SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel" "fedora" "gparted" "pop_os")
 
 declare -A SUPPORT_MATRIX
 
@@ -82,7 +82,10 @@ SUPPORT_MATRIX[debian]="SUPPORTED"
 
 SUPPORT_MATRIX[trisquel]="SUPPORTED"
 
+SUPPORT_MATRIX[pop_os]="SUPPORTED"
+
 SUPPORT_MATRIX[fedora]="DONT_WRITE_MENU_LINES"
+
 # SUPPORT_MATRIX[fedora]="SUPPORTED"
 
 SUPPORT_MATRIX[gparted]="SUPPORTED"
@@ -366,6 +369,21 @@ gparted)
 	
 	return
 	;;	
+pop_os)
+    BOOT_STRING="casper"
+	VMLINUZ_STRING="/casper/vmlinuz.efi"
+	INITRD_STRING="/casper/initrd.gz"
+	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
+	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
+	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	
+	verify_boot_files_exist_on_target
+	
+	return
+	;;
+		
+	
+	
 other)
 	return
 	;;
