@@ -296,8 +296,8 @@ ubuntu)
 	INITRD_STRING="/casper/initrd"
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
-	
+	MENU_STRING3="initrd=${DELTA}${FANTASY_NAME}${INITRD_STRING}  no-quiet  toram ---"
+
 	verify_boot_files_exist_on_target
 	
 	return
@@ -512,7 +512,9 @@ then
 		echo  -e "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}\n"
 		echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
 		echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-		echo  "KERNEL ${FANTASY_NAME}${VMLINUZ_STRING}" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
+		
+		# KERNEL mnt/ubuntu_mate_22/casper/vmlinuz
+		echo  "KERNEL ${DELTA}${FANTASY_NAME}${VMLINUZ_STRING}" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
 		echo  "${MENU_STRING1}${MENU_STRING2}${MENU_STRING3}"  >>${LOCATION_OF_MENU}${MENU_F_NAME}
 	else
 		echo "Lines already present in:  ${LOCATION_OF_MENU}${MENU_F_NAME}"
@@ -528,8 +530,23 @@ then
 # main
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
-VERSION="2.0"
+VERSION="2.4"
+
+# We are mounting all the images under the  WHERE_TO_MOUNT dir
+# This is to avoid copying them when performing a timeshift
+# as we are going to exclude in timeshift everything below WHERE_TO_MOUNT
+
 WHERE_TO_MOUNT="/var/lib/tftpboot/mnt/"
+
+TFTP_CONFIG_FILE="/etc/default/tftpd-hpa"
+TFTP_DIR=$(grep TFTP_DIRECTORY  <${TFTP_CONFIG_FILE}  |cut -d '"' -f 2)
+
+#Now we'll find the difference between WHERE_TO_MOUNT and TFTP_DIR
+# so we can use it later when building the menu strings.
+# $DELTA will have a trailing "/"
+DELTA=${WHERE_TO_MOUNT/${TFTP_DIR}/ }
+DELTA=${DELTA/ /}
+
 FSTAB="/etc/fstab"
 EXPORTS="/etc/exports"
 LOCATION_OF_MENU="/var/lib/tftpboot/debian-installer/amd64/boot-screens/"
