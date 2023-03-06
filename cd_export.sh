@@ -540,8 +540,8 @@ EXPORT_OPTIONS_STRING='*(ro,sync,no_wdelay,insecure_locks,no_root_squash,insecur
 
 STRING_TO_CLEAR_IN_FAN_NAME=("-desktop" "_desktop" "-amd64" "_amd64" )
 
-INITRD="/casper/initrd"
-VMLINUZ="/casper/vmlinuz" 
+# INITRD="/casper/initrd"
+# VMLINUZ="/casper/vmlinuz" 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
