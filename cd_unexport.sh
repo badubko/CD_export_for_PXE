@@ -11,7 +11,18 @@ show_usage ()
     Version:  $VERSION
     This script will UNDo all the operations added by cd_export.sh needed to enable PXE boot from an
     iso image of a bootable linux cd,  passed as the first argument.
-       
+    
+    First argument "cd_to_UNexport" can be either:
+    
+    - Complete path and file name of the mounted iso image:
+		/samba/public-q/Linux/Ubuntu/ubuntu-mate-22.04.1-desktop-amd64.iso
+     
+     - Fantasy name used to mount the image  that was supplied by the user:
+			ubuntu_mate_22
+       or obtained from the iso name, if a fantasy_name was not supplied as a second argument to the cd_export script. 
+       In this case it would be:
+			ubuntu-mate-22.04.1
+			
         1- Removes the corresponding lines from PXE boot menu (if there are any)
 			${LOCATION_OF_MENU}${MENU_F_NAME}
     	2- delete_line_from_exports
