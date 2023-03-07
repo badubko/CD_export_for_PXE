@@ -143,7 +143,7 @@ CD_TO_UN_EXPORT="${1}"
 # Get FANTASY_NAME === name used to mount the CD
 # Check if present in fstab with the same name
 
-mount | grep   -q  "${CD_TO_UN_EXPORT}" 
+mount | grep   -q  -e "${CD_TO_UN_EXPORT} " 
  
  if [ $? -eq 0 ]
 then
@@ -162,7 +162,10 @@ fi
  
 # From fstab: 
 # Select all non comment lines | Select lines containing CD_TO_UN_EXPORT | subsitute spaces by only one space
-LINE_IN_FSTAB=$( grep  -E -v  -e  "^#.*" < ${FSTAB} | egrep  -E -e  "${CD_TO_UN_EXPORT}" | sed  -r -e 's/ +/ /g')
+# Watch out the blank char in "${CD_TO_UN_EXPORT} "
+# This is not enough when dealing with fantasy name (2nd case)
+
+LINE_IN_FSTAB=$( grep  -E -v  -e  "^#.*" < ${FSTAB} | egrep  -E -e  "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g')
 	
 if [[ -z ${LINE_IN_FSTAB} ]] 
 then
