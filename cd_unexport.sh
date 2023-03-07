@@ -154,23 +154,52 @@ then
    echo "${CD_TO_UN_EXPORT}" " is mounted..."
    MOUNT_STATUS="MOUNTED"
    # Determine  name used to mount
-	MOUNT_NAME=$( mount | grep   "${CD_TO_UN_EXPORT}" | sed  -r -e 's/ +/ /g' | cut -d " " -f 3 )
+	ORIGIN_MOUNT_NAME=$( mount | grep   "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g' | cut -d " " -f 1 )
+	DEST_MOUNT_NAME=$( mount | grep   "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g' | cut -d " " -f 3 )
 	
-	MOUNT_NAME=${MOUNT_NAME##*/}
+	# MOUNT_NAME=${MOUNT_NAME##*/}
 	
-	echo " Mount name: ${MOUNT_NAME}"
-	
+	echo " Origin Mount name: ${ORIGIN_MOUNT_NAME}"
+	echo " Dest  Mount name: ${DEST_MOUNT_NAME}"
 else
     echo "${CD_TO_UN_EXPORT}" " is NOT mounted..."
 	MOUNT_STATUS="NOT_MOUNTED"
 fi
+
  
 # From fstab: 
 # Select all non comment lines | Select lines containing CD_TO_UN_EXPORT | subsitute spaces by only one space
 # Watch out the blank char in "${CD_TO_UN_EXPORT} "
 # This is not enough when dealing with fantasy name (2nd case)
 
-LINE_IN_FSTAB=$( grep  -E -v  -e  "^#.*" < ${FSTAB} | egrep  -E -e  "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g')
+# Count non-comment lines in fstab containing CD_TO_UN_EXPORT
+LINES_IN_FSTAB_COUNT=$( grep  -E -v  -e  "^#.*" < ${FSTAB} | egrep  -E -e  "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g' | wc -l )
+
+
+
+case ${LINES_IN_FSTAB_COUNT} in
+0)
+    echo "0 lines"
+ 		echo "${CD_TO_UN_EXPORT} not present in ${FSTAB}"
+		echo "unmount manually"
+		FSTAB_STATUS="NOT_IN_FSTAB"    
+;;
+1)
+    echo "1 line"
+    LINE_IN_FSTAB=$( grep  -E -v  -e  "^#.*" < ${FSTAB} | egrep  -E -e  "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g')
+    ORIGIN_IN_FSTAB=$( cut -d " " -f 1 <<<${LINE_IN_FSTAB}) 
+    echo ${ORIGIN_IN_FSTAB}
+    DEST_IN_FSTAB=$( cut -d " " -f 2 <<<${LINE_IN_FSTAB} )
+    echo ${DEST_IN_FSTAB}
+;;
+*)
+    echo "multiple Lines"
+    FSTAB_STATUS="MULTIPLE_LINES_IN_FSTAB"  
+;;
+
+esac
+
+exit
 	
 if [[ -z ${LINE_IN_FSTAB} ]] 
 then
