@@ -42,10 +42,25 @@ show_usage ()
 return
 }
 
+verify_mount_vs_fstab()
+{
+	if [ ${ORIGIN_MOUNT_PATH}  ==  ${ORIGIN_IN_FSTAB} ] &&   [ ${DEST_MOUNT_PATH}  ==  ${DEST_IN_FSTAB} ] 
+	then
+		MOUNT_AND_FSTAB="MATCH"
+		return
+	else
+		MOUNT_AND_FSTAB="NO_MATCH"
+		return
+	fi
+
+}
+
 delete_line_from_fstab ()
 {
-	sed -i  -r -e   "/${MOUNT_NAME_FSTAB}/d"  "${FSTAB}" 
-	echo "Line containing ${MOUNT_NAME_FSTAB} deleted from ${FSTAB}"
+	# Maybe not remove commented lines??    # <<<---- Improve?
+	
+	sed -i  -r -e   "/${DEST_IN_FSTAB}/d"  "${FSTAB}" 
+	echo "Line containing ${DEST_IN_FSTAB} deleted from ${FSTAB}"
 	return
 }
 
@@ -60,7 +75,7 @@ unexport ()
 {
 	exportfs -r
 	
-	echo "Unexported:  " "${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}"
+	echo "Unexported:  " "${DEST_IN_FSTAB}"
 	return
 }
 
@@ -70,10 +85,12 @@ delete_line_from_exports ()
 	# the "/" character is replaced by "|" as pattern delimiter, but should be escaped with "\ "at the beggining.
 	# sed -i  -r  -e  "\|${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}|d"  "${EXPORTS}" 
 	
-	sed -i  -r  -e  "\|${MOUNT_NAME_FSTAB}|d"  "${EXPORTS}" 
+	# Maybe a verification is needed to find if line exists in exports...    # <<<---- Improve?
+	
+	sed -i  -r  -e  "\|${DEST_IN_FSTAB}|d"  "${EXPORTS}" 
 	
 	echo "		Line containing "
-	echo "				${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}"
+	echo "				${DEST_IN_FSTAB}"
 	echo "		was deleted from ${EXPORTS}"
 	
 	return
@@ -91,22 +108,28 @@ delete_line_from_menu ()
 	
 	# This should be refined to cover all alternatives, ie, comment lines in the middle...
 	
-	# for NAME in  ${MOUNT_NAME_FSTAB} ${MOUNT_NAME}     
-	sed -i  -r  -e "/${MOUNT_NAME_FSTAB}/,+2d"  "${LOCATION_OF_MENU}${MENU_F_NAME}" 
+	
+	LABEL_NAME="${MOUNT_NAME}"
+	sed -i  -r  -e "/${LABEL_NAME}/,+2d"  "${LOCATION_OF_MENU}${MENU_F_NAME}" 
 
 	return
 }
 
 delete_mount_point()
 {
-	rmdir  "${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB}"
-	if [ $? ]
+	if [ -d "${DEST_IN_FSTAB}" ]
 	then
-		echo "Mount point  ${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB} was removed"
+		rmdir  "${DEST_IN_FSTAB}"
+		if [ $? ]
+		then
+			echo "Mount point  ${DEST_IN_FSTAB} was removed"
+		else
+			echo "Error:  ${DEST_IN_FSTAB} was NOT removed"
+		fi    
+		return
 	else
-	    echo "Error:  ${WHERE_TO_MOUNT}${MOUNT_NAME_FSTAB} was NOT removed"
-	fi    
-	return
+			echo "Error:  ${DEST_IN_FSTAB} DOES NOT exist"
+	fi
 }
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
@@ -154,13 +177,14 @@ then
    echo "${CD_TO_UN_EXPORT}" " is mounted..."
    MOUNT_STATUS="MOUNTED"
    # Determine  name used to mount
-	ORIGIN_MOUNT_NAME=$( mount | grep   "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g' | cut -d " " -f 1 )
-	DEST_MOUNT_NAME=$( mount | grep   "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g' | cut -d " " -f 3 )
+	ORIGIN_MOUNT_PATH=$( mount | grep   "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g' | cut -d " " -f 1 )
+	DEST_MOUNT_PATH=$( mount | grep   "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g' | cut -d " " -f 3 )
 	
-	# MOUNT_NAME=${MOUNT_NAME##*/}
+	# Will be used to identify the LABEL in the menu
+	MOUNT_NAME=${DEST_MOUNT_PATH##*/} 
 	
-	echo " Origin Mount name: ${ORIGIN_MOUNT_NAME}"
-	echo " Dest  Mount name: ${DEST_MOUNT_NAME}"
+	echo " Origin Mount name: ${ORIGIN_MOUNT_PATH}"
+	echo " Dest  Mount name: ${DEST_MOUNT_PATH}"
 else
     echo "${CD_TO_UN_EXPORT}" " is NOT mounted..."
 	MOUNT_STATUS="NOT_MOUNTED"
@@ -179,101 +203,127 @@ LINES_IN_FSTAB_COUNT=$( grep  -E -v  -e  "^#.*" < ${FSTAB} | egrep  -E -e  "${CD
 
 case ${LINES_IN_FSTAB_COUNT} in
 0)
-    echo "0 lines"
+   
+    FSTAB_STATUS="NOT_IN_FSTAB" 
+		echo "0 lines"
  		echo "${CD_TO_UN_EXPORT} not present in ${FSTAB}"
-		echo "unmount manually"
-		FSTAB_STATUS="NOT_IN_FSTAB"    
+		# echo "unmount manually"
+		   
 ;;
 1)
+	FSTAB_STATUS="IN_FSTAB" 	
+    
     echo "1 line"
     LINE_IN_FSTAB=$( grep  -E -v  -e  "^#.*" < ${FSTAB} | egrep  -E -e  "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g')
+    
     ORIGIN_IN_FSTAB=$( cut -d " " -f 1 <<<${LINE_IN_FSTAB}) 
     echo ${ORIGIN_IN_FSTAB}
+    
     DEST_IN_FSTAB=$( cut -d " " -f 2 <<<${LINE_IN_FSTAB} )
     echo ${DEST_IN_FSTAB}
+ 
 ;;
 *)
-    echo "multiple Lines"
     FSTAB_STATUS="MULTIPLE_LINES_IN_FSTAB"  
+     echo "multiple Lines"
 ;;
 
 esac
 
-exit
+#exit
 	
-if [[ -z ${LINE_IN_FSTAB} ]] 
-then
-		echo "${CD_TO_UN_EXPORT} not present in ${FSTAB}"
-		echo "unmount manually"
-		FSTAB_STATUS="NOT_IN_FSTAB"     
+#if [[ -z ${LINE_IN_FSTAB} ]] 
+#then
+		#echo "${CD_TO_UN_EXPORT} not present in ${FSTAB}"
+		#echo "unmount manually"
+		#FSTAB_STATUS="NOT_IN_FSTAB"     
 		
-else
-	MOUNT_NAME_FSTAB=$( cut -d " " -f 2 <<<${LINE_IN_FSTAB}  )
-   	MOUNT_NAME_FSTAB=${MOUNT_NAME_FSTAB##*/}	
+#else
+	#MOUNT_NAME_FSTAB=$( cut -d " " -f 2 <<<${LINE_IN_FSTAB}  )
+   	#MOUNT_NAME_FSTAB=${MOUNT_NAME_FSTAB##*/}	
 
-	echo " Mount name in ${FSTAB}:  ${MOUNT_NAME_FSTAB}"
+	#echo " Mount name in ${FSTAB}:  ${MOUNT_NAME_FSTAB}"
 		
-	if  [ ${MOUNT_STATUS} == "MOUNTED"  ]  &&  [ "${MOUNT_NAME_FSTAB}" != "${MOUNT_NAME}" ]
-	then
+	#if  [ ${MOUNT_STATUS} == "MOUNTED"  ]  &&  [ "${MOUNT_NAME_FSTAB}" != "${MOUNT_NAME}" ]
+	#then
 			
-			FSTAB_STATUS="NAMES_DIFFER"     
+			#FSTAB_STATUS="NAMES_DIFFER"     
 		        
-	else
-			FSTAB_STATUS="IN_FSTAB" 	        
-	fi 
+	#else
+			#FSTAB_STATUS="IN_FSTAB" 	        
+	#fi 
 
-fi
+#fi
 
 echo "Status:   ${MOUNT_STATUS}_${FSTAB_STATUS}"
 
 case  "${MOUNT_STATUS}_${FSTAB_STATUS}"  in
-NOT_MOUNTED_NOT_IN_FSTAB )
+NOT_MOUNTED_NOT_IN_FSTAB )   #OK
 		echo "Nothing to do here..."
 		exit
 		;;
-NOT_MOUNTED_IN_FSTAB )
+NOT_MOUNTED_IN_FSTAB )  #OK
 		delete_line_from_menu
 		delete_line_from_exports
-		delete_line_from_fstab
-		;;
-MOUNTED_IN_FSTAB )
-		delete_line_from_menu
-		delete_line_from_exports
-		unexport
-		umount_cd
 		delete_line_from_fstab
 		delete_mount_point
 		;;
-MOUNTED_NOT_IN_FSTAB )		
+
+NOT_MOUNTED_MULTIPLE_LINES_IN_FSTAB)
+		echo "Fix this manually" 
+		exit
+		;;	
+		
+MOUNTED_IN_FSTAB ) 			#OK
+        verify_mount_vs_fstab
+		case  ${MOUNT_AND_FSTAB} in
+				MATCH)
+					delete_line_from_menu
+					delete_line_from_exports
+					unexport
+					umount_cd
+					delete_line_from_fstab
+					delete_mount_point
+					;;
+				NO_MATCH)
+				    echo " MOUNT_AND_FSTAB=  ${MOUNT_AND_FSTAB}" 
+				    echo "Fix this manually"
+				    exit
+					;;
+				*)
+				    echo "Das kann nicht sein Macaya!!!! MOUNT_AND_FSTAB=  ${MOUNT_AND_FSTAB}"
+				    exit
+					;;
+		esac
+		;;
+MOUNTED_NOT_IN_FSTAB )		#OK
 		delete_line_from_menu
 		# Improve this temporary fix...
 		# We don't have an entry in  fstab, so we use the mount point name we have got from the mount command.
-		MOUNT_NAME_FSTAB="${MOUNT_NAME}"
+		# MOUNT_NAME_FSTAB="${DEST_MOUNT_PATH}"
 		delete_line_from_exports
 		unexport
 		umount_cd
 		delete_mount_point
 		;;
-MOUNTED_NAMES_DIFFER)		
-		echo "${MOUNT_NAME_FSTAB}" "   "  "${MOUNT_NAME}" 
-		echo "Mount name  is not the same as mount point in ${FSTAB} Fix this manually..."
-		exit
-		;;		
+
 * )
 		echo "What is this Macaya? ${MOUNT_STATUS}_${FSTAB_STATUS}"
 		;;
 esac
 
-# Delete lines from menu using FANTASY_NAME
+# Delete lines from menu 
 
-# Check if cd present in exports using FANTASY_NAME
+# Check if cd present in exports 
 
-# Check if cd is exported  using FANTASY_NAME
+# Check if cd is exported  
 
 #  Delete entry from exports and "unexport" by updating 
 
 # Umount cd
 
 # Delete from fstab
+
+# Delete mount point
 
 
