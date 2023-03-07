@@ -14,14 +14,11 @@ show_usage ()
     
     First argument "cd_to_UNexport" can be either:
     
-    - Complete path and file name of the mounted iso image:
+    - Complete path and file name of the mounted iso image. Example:
 		/samba/public-q/Linux/Ubuntu/ubuntu-mate-22.04.1-desktop-amd64.iso
      
-     - Fantasy name used to mount the image  that was supplied by the user:
-			ubuntu_mate_22
-       or obtained from the iso name, if a fantasy_name was not supplied as a second argument to the cd_export script. 
-       In this case it would be:
-			ubuntu-mate-22.04.1
+     - Complete mount point path. Example:
+		/var/lib/tftfpboot/mnt/ubuntu-mate-22.04.1
 			
         1- Removes the corresponding lines from PXE boot menu (if there are any)
 			${LOCATION_OF_MENU}${MENU_F_NAME}
@@ -35,6 +32,13 @@ show_usage ()
     In this version, the functionaliy of this scipt is limited only to bootable linux images.
 
 !FINIS
+
+     #- Fantasy name used to mount the image  that was supplied by the user:
+			#ubuntu_mate_22
+       #or obtained from the iso name, if a fantasy_name was not supplied as a second argument to the cd_export script. 
+       #In this case it would be:
+			#ubuntu-mate-22.04.1
+
 return
 }
 
@@ -151,6 +155,7 @@ then
    MOUNT_STATUS="MOUNTED"
    # Determine  name used to mount
 	MOUNT_NAME=$( mount | grep   "${CD_TO_UN_EXPORT}" | sed  -r -e 's/ +/ /g' | cut -d " " -f 3 )
+	
 	MOUNT_NAME=${MOUNT_NAME##*/}
 	
 	echo " Mount name: ${MOUNT_NAME}"
