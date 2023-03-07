@@ -86,7 +86,7 @@ SUPPORT_MATRIX[pop_os]="SUPPORTED"
 
 SUPPORT_MATRIX[alma]="NOT_SUPPORTED"
 
-SUPPORT_MATRIX[fedora]="DONT_WRITE_MENU_LINES"
+SUPPORT_MATRIX[fedora]="NOT_SUPPORTED"
 
 # SUPPORT_MATRIX[fedora]="SUPPORTED"
 
@@ -330,7 +330,7 @@ debian)
 	echo "initrd string: ${INITRD_STRING}"
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}/${INITRD_STRING}  no-quiet splash toram ---"
+	MENU_STRING3="initrd=${DELTA}${FANTASY_NAME}/${INITRD_STRING}  no-quiet splash toram ---"
 	return
 	;;
 	
@@ -340,7 +340,7 @@ trisquel)
 	INITRD_STRING="/casper/initrd"
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	MENU_STRING3="initrd=${DELTA}${FANTASY_NAME}${INITRD_STRING}  no-quiet  toram ---"
 	
 	verify_boot_files_exist_on_target
 	
@@ -353,7 +353,7 @@ fedora)
 	INITRD_STRING="/images/pxeboot/initrd.img"
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet  toram ---"
 	
 	verify_boot_files_exist_on_target
 	
@@ -365,7 +365,7 @@ gparted)
 	INITRD_STRING="/live/initrd.img"
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  union=overlay  config components no-quiet splash toram ---"
+	MENU_STRING3="initrd=${DELTA}${FANTASY_NAME}${INITRD_STRING}  union=overlay  config components no-quiet  toram ---"
 	
 	verify_boot_files_exist_on_target
 	
@@ -377,7 +377,7 @@ pop_os)
 	INITRD_STRING="/casper/initrd.gz"
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	MENU_STRING3="initrd=${DELTA}${FANTASY_NAME}${INITRD_STRING}  no-quiet  toram ---"
 	
 	verify_boot_files_exist_on_target
 	
@@ -396,7 +396,7 @@ alma)
 	
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
+	MENU_STRING3="initrd=${DELTA}${FANTASY_NAME}${INITRD_STRING}  no-quiet splash toram ---"
 	
 	verify_boot_files_exist_on_target
 	
@@ -512,8 +512,7 @@ then
 		echo  -e "Adding the lines to: ${LOCATION_OF_MENU}${MENU_F_NAME}\n"
 		echo "#" 										 														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
 		echo "LABEL ${FANTASY_NAME}"  														 >>${LOCATION_OF_MENU}${MENU_F_NAME}
-		
-		# KERNEL mnt/ubuntu_mate_22/casper/vmlinuz
+
 		echo  "KERNEL ${DELTA}${FANTASY_NAME}${VMLINUZ_STRING}" 							 >>${LOCATION_OF_MENU}${MENU_F_NAME}
 		echo  "${MENU_STRING1}${MENU_STRING2}${MENU_STRING3}"  >>${LOCATION_OF_MENU}${MENU_F_NAME}
 	else
