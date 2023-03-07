@@ -353,7 +353,7 @@ fedora)
 	INITRD_STRING="/images/pxeboot/initrd.img"
 	MENU_STRING1="APPEND  root=/dev/nfs boot=${BOOT_STRING} netboot=nfs ip=dhcp "
 	MENU_STRING2=" nfsroot=${MY_SERVER_IP}:${WHERE_TO_MOUNT}${FANTASY_NAME} "
-	MENU_STRING3="initrd=${FANTASY_NAME}${INITRD_STRING}  no-quiet  toram ---"
+	MENU_STRING3="initrd=${DELTA}${FANTASY_NAME}${INITRD_STRING}  no-quiet  toram ---"
 	
 	verify_boot_files_exist_on_target
 	
