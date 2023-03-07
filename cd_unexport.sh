@@ -57,18 +57,30 @@ verify_mount_vs_fstab()
 
 delete_line_from_fstab ()
 {
-	# Maybe not remove commented lines??    # <<<---- Improve?
+	# Maybe  remove commented lines??    # <<<---- Improve?
 	
-	sed -i  -r -e   "/${DEST_IN_FSTAB}/d"  "${FSTAB}" 
-	echo "Line containing ${DEST_IN_FSTAB} deleted from ${FSTAB}"
+	sed -i  -r  -e   "\|${DEST_IN_FSTAB}|d"  "${FSTAB}" 
+	if [ $? -eq 0 ]
+	then
+			echo "Line containing ${DEST_IN_FSTAB} deleted from ${FSTAB}"
+	else
+			echo "Line containing ${DEST_IN_FSTAB} NOT  deleted from ${FSTAB}"
+	fi
+	
 	return
 }
 
 umount_cd ()
 {
     umount ${CD_TO_UN_EXPORT}
-    echo "Umounted ${CD_TO_UN_EXPORT}"
+    if [ $?  -eq  0 ]
+    then
+		echo "Umounted ${CD_TO_UN_EXPORT}"
+	else
+		 echo "Umount of ${CD_TO_UN_EXPORT} FAILED..."
+    fi
     return
+    
 }
 
 unexport ()
@@ -164,6 +176,11 @@ fi
 
 CD_TO_UN_EXPORT="${1}"
 
+if      [ ! -d ${CD_TO_UN_EXPORT} ]  &&  [ ! -f ${CD_TO_UN_EXPORT}  ]
+then
+	echo "CD_TO_UN_EXPORT: ${CD_TO_UN_EXPORT} doesn't exist"
+	exit
+fi
 
 
 # Check if cd is mounted and get mount_point  from mount
@@ -230,7 +247,6 @@ case ${LINES_IN_FSTAB_COUNT} in
 
 esac
 
-#exit
 	
 #if [[ -z ${LINE_IN_FSTAB} ]] 
 #then
@@ -269,7 +285,7 @@ NOT_MOUNTED_IN_FSTAB )  #OK
 		delete_mount_point
 		;;
 
-NOT_MOUNTED_MULTIPLE_LINES_IN_FSTAB)
+NOT_MOUNTED_MULTIPLE_LINES_IN_FSTAB)    #OK
 		echo "Fix this manually" 
 		exit
 		;;	
