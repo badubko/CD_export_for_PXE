@@ -110,8 +110,6 @@ EXPORT_OPTIONS_STRING='*(ro,sync,no_wdelay,insecure_locks,no_root_squash,insecur
 
 STRING_TO_CLEAR_IN_FAN_NAME=("-desktop" "_desktop" "-amd64" "_amd64" )
 
-#INITRD="/casper/initrd"
-#VMLINUZ="/casper/vmlinuz" 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
 if [ ${USER} != "root" ]
@@ -230,13 +228,4 @@ esac
 
 # Delete from fstab
 
-		#echo "Mount name  is not the same as mount point in ${FSTAB} Correct this..."
-		#umount ${CD_TO_UN_EXPORT}
-		#delete_line_from_menu
-		#delete_line_from_exports
-		#unexport
-		#delete_line_from_fstab
 
-
-
-# 
