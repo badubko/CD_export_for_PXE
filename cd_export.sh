@@ -529,7 +529,7 @@ then
 # main
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
-VERSION="2.4"
+VERSION="2.6"
 
 # We are mounting all the images under the  WHERE_TO_MOUNT dir
 # This is to avoid copying them when performing a timeshift

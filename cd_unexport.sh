@@ -168,7 +168,7 @@ delete_mount_point()
 # main
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
-VERSION="2.0"
+VERSION="2.6"
 WHERE_TO_MOUNT="/var/lib/tftpboot/mnt/"
 FSTAB="/etc/fstab"
 EXPORTS="/etc/exports"
