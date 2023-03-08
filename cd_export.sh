@@ -206,14 +206,14 @@ case ${ACTION} in
 
 "Add" )
         echo "Adding line to ${FSTAB}"
-		echo -e "#"  >>${FSTAB}
+		echo  "#"  >>${FSTAB}
 		printf "%s  %s  %s \n "  ${CD_TO_EXPORT}  ${WHERE_TO_MOUNT}${FANTASY_NAME} "${MOUNT_OPTIONS_STRING}" >>${FSTAB}
         ;;
        
 "Inform_Add" )
 		echo "${CD_TO_EXPORT}" " Already present in ${FSTAB} as a comment"
 		echo "Adding line to fstab"
-		echo -e "#"  >>${FSTAB}
+		echo "#"  >>${FSTAB}
 		printf "%s  %s  %s \n "  ${CD_TO_EXPORT}  ${WHERE_TO_MOUNT}${FANTASY_NAME} "${MOUNT_OPTIONS_STRING}" >>${FSTAB}
           ;;
 "Verify_Fantasy" )
@@ -469,7 +469,7 @@ then
    fi 
 else
          echo "Adding line to ${EXPORTS}"
-         echo -e "#     \n"  >> ${EXPORTS}
+         echo  "# "  >> ${EXPORTS}
          printf "%s  %s  %s \n "  ${WHERE_TO_MOUNT}${FANTASY_NAME} ${EXPORT_OPTIONS_STRING} >>${EXPORTS}
          
 fi
