@@ -262,6 +262,9 @@ NOT_MOUNTED_NOT_IN_FSTAB )   #OK
 		exit
 		;;
 NOT_MOUNTED_IN_FSTAB )  #OK
+        # As the .iso is not mounted we get the mount_name from what is indicated in fstab
+        
+        MOUNT_NAME=${DEST_IN_FSTAB##*/} 
 		delete_line_from_menu
 		delete_line_from_exports
 		delete_line_from_fstab
