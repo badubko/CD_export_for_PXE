@@ -86,8 +86,15 @@ umount_cd ()
 unexport ()
 {
 	exportfs -r
+	if [ $?  -eq  0 ]
+    then
+			# echo "unexport SUCCEDED"
+			echo "Unexported:  " "${DEST_IN_FSTAB}"
+	else
+			echo "unexport FAILED"
+	fi		
 	
-	echo "Unexported:  " "${DEST_IN_FSTAB}"
+	
 	return
 }
 #----------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,11 +107,17 @@ delete_line_from_exports ()
 	# Maybe a verification is needed to find if line exists in exports...    # <<<---- Improve?
 	
 	sed -i  -r  -e  "\|${DEST_IN_FSTAB}|d"  "${EXPORTS}" 
-	
-	echo "Line containing "
-	echo "		${DEST_IN_FSTAB}"
-	echo "was deleted from ${EXPORTS}"
-	
+	if [ $?  -eq  0 ]
+    then
+			echo "Line containing "
+			echo "		${DEST_IN_FSTAB}"
+			echo "was deleted from ${EXPORTS}"
+	else
+			echo "Removal of"
+			echo "		${DEST_IN_FSTAB}"
+			echo "from ${EXPORTS}   FAILED"
+	fi		
+			
 	return
 }
 #----------------------------------------------------------------------------------------------------------------------------------------------	
@@ -143,7 +156,7 @@ delete_mount_point()
 		then
 			echo "Mount point  ${DEST_IN_FSTAB} was removed"
 		else
-			echo "Error:  ${DEST_IN_FSTAB} was NOT removed"
+			echo "Removal of:  ${DEST_IN_FSTAB} FAILED"
 		fi    
 		return
 	else
@@ -267,6 +280,7 @@ NOT_MOUNTED_IN_FSTAB )  #OK
         MOUNT_NAME=${DEST_IN_FSTAB##*/} 
 		delete_line_from_menu
 		delete_line_from_exports
+		unexport
 		delete_line_from_fstab
 		delete_mount_point
 		;;
