@@ -72,7 +72,7 @@ return
 #----------------------------------------------------------------------------------------------------------------------------------------------
 determine_os_type()
 {
-SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel" "fedora" "gparted" "pop_os" "alma")
+# SUPPORTED_OS_TYPES=("ubuntu" "debian" "trisquel" "fedora" "gparted" "pop_os" "alma"  "haiku")
 
 declare -A SUPPORT_MATRIX
 
@@ -87,8 +87,6 @@ SUPPORT_MATRIX[pop_os]="SUPPORTED"
 SUPPORT_MATRIX[alma]="NOT_SUPPORTED"
 
 SUPPORT_MATRIX[fedora]="NOT_SUPPORTED"
-
-# SUPPORT_MATRIX[fedora]="SUPPORTED"
 
 SUPPORT_MATRIX[gparted]="SUPPORTED"
 
