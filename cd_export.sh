@@ -492,8 +492,6 @@ write_menu_lines ()
 {
 # Add corresponding lines to PXE boot menu	
 
-# Add corresponding lines to PXE boot menu
-
 if  [  ${MENU_LINES_GENERATION} !=  "WRITE_MENU_LINES"  ]
 then
 		echo "Add menu lines manually"
