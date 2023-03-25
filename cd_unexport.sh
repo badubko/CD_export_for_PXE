@@ -168,7 +168,7 @@ delete_mount_point()
 # main
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
-VERSION="2.6"
+VERSION="2.8"
 WHERE_TO_MOUNT="/var/lib/tftpboot/mnt/"
 FSTAB="/etc/fstab"
 EXPORTS="/etc/exports"
@@ -224,7 +224,7 @@ then
 	echo " Dest  Mount name: ${DEST_MOUNT_PATH}"
 else
     echo "${CD_TO_UN_EXPORT}" " is NOT mounted..."
-	MOUNT_STATUS="NOT_MOUNTED"
+	MOUNT_STATUS="NOT-MOUNTED"
 fi
 
  
@@ -241,13 +241,13 @@ LINES_IN_FSTAB_COUNT=$( grep  -E -v  -e  "^#.*" < ${FSTAB} | egrep  -E -e  "${CD
 case ${LINES_IN_FSTAB_COUNT} in
 0)
    
-    FSTAB_STATUS="NOT_IN_FSTAB" 
+    FSTAB_STATUS="NOT-IN-FSTAB" 
 		echo "0 lines present in fstab"
  		echo "${CD_TO_UN_EXPORT} not present in ${FSTAB}"
 			   
 ;;
 1)
-	FSTAB_STATUS="IN_FSTAB" 	
+	FSTAB_STATUS="IN-FSTAB" 	
     
     echo "1 line found in fstab"
     echo "${CD_TO_UN_EXPORT} present in ${FSTAB}"
@@ -261,7 +261,7 @@ case ${LINES_IN_FSTAB_COUNT} in
  
 ;;
 *)
-    FSTAB_STATUS="MULTIPLE_LINES_IN_FSTAB"  
+    FSTAB_STATUS="MULTIPLE-LINES-IN-FSTAB"  
      echo "Multiple Lines present in fstab"
 ;;
 
@@ -270,11 +270,11 @@ esac
 echo "Status:   ${MOUNT_STATUS}_${FSTAB_STATUS}"
 
 case  "${MOUNT_STATUS}_${FSTAB_STATUS}"  in
-NOT_MOUNTED_NOT_IN_FSTAB )   #OK
+NOT-MOUNTED_NOT-IN-FSTAB )   #OK
 		echo "Nothing to do here..."
 		exit
 		;;
-NOT_MOUNTED_IN_FSTAB )  #OK
+NOT-MOUNTED_IN-FSTAB )  #OK
         # As the .iso is not mounted we get the mount_name from what is indicated in fstab
         
         MOUNT_NAME=${DEST_IN_FSTAB##*/} 
@@ -285,12 +285,13 @@ NOT_MOUNTED_IN_FSTAB )  #OK
 		delete_mount_point
 		;;
 
-NOT_MOUNTED_MULTIPLE_LINES_IN_FSTAB)    #OK
+NOT-MOUNTED_MULTIPLE-LINES-IN-FSTAB)    #OK
 		echo "Fix this manually" 
 		exit
 		;;	
 		
-MOUNTED_IN_FSTAB ) 			#OK
+MOUNTED_IN-FSTAB ) 			#OK
+        # Verify if target is mounted as specified in fstab...
         verify_mount_vs_fstab
 		case  ${MOUNT_AND_FSTAB} in
 				MATCH)
@@ -312,7 +313,7 @@ MOUNTED_IN_FSTAB ) 			#OK
 					;;
 		esac
 		;;
-MOUNTED_NOT_IN_FSTAB )		#OK
+MOUNTED_NOT-IN-FSTAB )		#OK
 		delete_line_from_menu
 	
 		# Improve this temporary fix...
