@@ -34,3 +34,8 @@ LISTA_FILES=$(find  Support_Matrix/ -type f ) ; LISTA_FILES=${LISTA_FILES//Suppo
  LISTA_FILES=$(find  ./Support_Matrix/ -type f ) ; LISTA_FILES=${LISTA_FILES//Support_Matrix\//} 
  LISTA_FILES=${LISTA_FILES//.sh/}; LISTA_FILES=${LISTA_FILES//.\//}
 $ echo $LISTA_FILES
+
+  
+LISTA_FILES=$(find /samba/badubko-q/Back_F/BAS/DOCS/CD_export_for_PXE/Support_Matrix -name '*.sh' -type f | sed 's/.*Support_Matrix\///g ' )
+ 
+LISTA_FILES=$(find ./Support_Matrix -name '*.sh' -type f | sed 's/.*Support_Matrix\///g ' )
