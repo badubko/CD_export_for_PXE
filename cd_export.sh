@@ -108,27 +108,27 @@ do
 	then
 			case ${SUPPORT_STAT} in
 			"SUPPORTED")
-			    STRINGS_DEFS_TO_INCLUDE="${PATH_NAME}/${PAIR}"
-				MENU_LINES_GENERATION="WRITE_MENU_LINES"
-				echo "OS_TYPE is: ${OS_TYPE}"   "SUPP_STATUS: ${SUPPORT_STAT}"   "	${STRINGS_DEFS_TO_INCLUDE}"
-				exit 
-				return
+		
+					STRINGS_DEFS_TO_INCLUDE="${PATH_NAME}/${SUPPORT_MATRIX_DIR}/${PAIR}"
+					MENU_LINES_GENERATION="WRITE_MENU_LINES"
+					echo "OS_TYPE is: ${OS_TYPE}"   "SUPP_STATUS: ${SUPPORT_STAT}"   "	${STRINGS_DEFS_TO_INCLUDE}"
+					# exit 
+					return
 				;;
 			"DONT_WRITE_MENU_LINES")
-				MENU_LINES_GENERATION="DONT_WRITE_MENU_LINES"
-				echo "OS_TYPE is: ${OS_TYPE}"   "SUPP_STATUS: ${SUPPORT_STAT}" 
-				exit 
-				return
+					MENU_LINES_GENERATION="DONT_WRITE_MENU_LINES"
+					echo "OS_TYPE is: ${OS_TYPE}"   "SUPP_STATUS: ${SUPPORT_STAT}" 
+					# exit 
+					return
 				;;
 			"NOT_SUPPORTED")
-				echo "OS_TYPE is: ${OS_TYPE}"   "SUPP_STATUS: ${SUPPORT_STAT}" 
-				echo "OS_TYPE: ${OS_TYPE} is NOT supported" 
-				exit 
-				return
-			    ;;
+					echo "OS_TYPE is: ${OS_TYPE}"   "SUPP_STATUS: ${SUPPORT_STAT}" 
+					echo "OS_TYPE: ${OS_TYPE} is NOT supported" 
+					exit 
+				 ;;
 			   *)
-				echo  "Holly cow! This is an unknown support status: ${SUPPORT_STAT}" 
-				exit
+					echo  "Holly cow! This is an unknown support status: ${SUPPORT_STAT}" 
+					exit
 			   ;; 
 			esac
 	fi
@@ -306,7 +306,7 @@ set_menu_strings ()
 MY_SERVER_IP="$(hostname -I )"
 MY_SERVER_IP=${MY_SERVER_IP% }
 
-
+source  ${STRINGS_DEFS_TO_INCLUDE}
 	
 return
 }
