@@ -33,12 +33,6 @@ show_usage ()
 
 !FINIS
 
-     #- Fantasy name used to mount the image  that was supplied by the user:
-			#ubuntu_mate_22
-       #or obtained from the iso name, if a fantasy_name was not supplied as a second argument to the cd_export script. 
-       #In this case it would be:
-			#ubuntu-mate-22.04.1
-
 return
 }
 #----------------------------------------------------------------------------------------------------------------------------------------------
@@ -254,10 +248,10 @@ case ${LINES_IN_FSTAB_COUNT} in
     LINE_IN_FSTAB=$( grep  -E -v  -e  "^#.*" < ${FSTAB} | egrep  -E -e  "${CD_TO_UN_EXPORT} " | sed  -r -e 's/ +/ /g')
     
     ORIGIN_IN_FSTAB=$( cut -d " " -f 1 <<<${LINE_IN_FSTAB}) 
-    echo ${ORIGIN_IN_FSTAB}
+    # echo ${ORIGIN_IN_FSTAB}
     
     DEST_IN_FSTAB=$( cut -d " " -f 2 <<<${LINE_IN_FSTAB} )
-    echo ${DEST_IN_FSTAB}
+    echo " Destination in fstab: ${DEST_IN_FSTAB}"
  
 ;;
 *)
