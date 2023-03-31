@@ -87,7 +87,7 @@ then
 		PATH_NAME="."   
 fi
 
-FILES_LIST=$(find "${PATH_NAME}/${SUPPORT_MATRIX_DIR}"  -name '*.sh' -type f | sed "s/.*${SUPPORT_MATRIX_DIR}\///g " )
+FILES_LIST=$(find "${PATH_NAME}/${SUPPORT_MATRIX_DIR}"  -name '*.sh' -type f,l | sed "s/.*${SUPPORT_MATRIX_DIR}\///g " )
 
 # echo $FILES_LIST
 
@@ -144,22 +144,23 @@ check_include_file ()
 
 # Before proceeding further, Check if all expected strings are present in target include file.
 # If not, just exit.
+if [  ${MENU_LINES_GENERATION} ==  "WRITE_MENU_LINES" ]
+then
+		for STRING_TO_SEARCH in  BOOT_STRING  VMLINUZ_STRING 	INITRD_STRING 	MENU_STRING1	MENU_STRING2 	MENU_STRING3
+		do
+			 grep -q "${STRING_TO_SEARCH}" <${STRINGS_DEFS_TO_INCLUDE}
+			if [  $?  != 0 ]
+			then
+				  echo "String: ${STRING_TO_SEARCH} NOT present in: ${STRINGS_DEFS_TO_INCLUDE} "
+				  exit
+			fi
 
-for STRING_TO_SEARCH in  BOOT_STRING  VMLINUZ_STRING 	INITRD_STRING 	MENU_STRING1	MENU_STRING2 	MENU_STRING3
-do
-     grep -q "${STRING_TO_SEARCH}" <${STRINGS_DEFS_TO_INCLUDE}
-	if [  $?  != 0 ]
-	then
-		  echo "String: ${STRING_TO_SEARCH} NOT present in: ${STRINGS_DEFS_TO_INCLUDE} "
-	      exit
-	fi
+		done
 
-done
-
-echo  "All strings present in include file"
-exit
-	
-return	
+		# echo  "All strings present in include file"
+				
+		return	
+fi		
 }
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
