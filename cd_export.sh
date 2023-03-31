@@ -142,8 +142,10 @@ exit
 check_include_file ()
 {
 
+# Before proceeding further, Check if all expected strings are present in target include file.
+# If not, just exit.
 
-for STRING_TO_SEARCH in  KAKA BOOT_STRING  VMLINUZ_STRING 	INITRD_STRING 	MENU_STRING1	MENU_STRING2 	MENU_STRING3
+for STRING_TO_SEARCH in  BOOT_STRING  VMLINUZ_STRING 	INITRD_STRING 	MENU_STRING1	MENU_STRING2 	MENU_STRING3
 do
      grep -q "${STRING_TO_SEARCH}" <${STRINGS_DEFS_TO_INCLUDE}
 	if [  $?  != 0 ]
