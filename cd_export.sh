@@ -138,6 +138,27 @@ echo "${CD_TO_EXPORT}"   "    <=>NOT FOUND in Support Matrix"
 exit 
 		
 }
+#----------------------------------------------------------------------------------------------------------------------------------------------
+check_include_file ()
+{
+
+
+for STRING_TO_SEARCH in  KAKA BOOT_STRING  VMLINUZ_STRING 	INITRD_STRING 	MENU_STRING1	MENU_STRING2 	MENU_STRING3
+do
+     grep -q "${STRING_TO_SEARCH}" <${STRINGS_DEFS_TO_INCLUDE}
+	if [  $?  != 0 ]
+	then
+		  echo "String: ${STRING_TO_SEARCH} NOT present in: ${STRINGS_DEFS_TO_INCLUDE} "
+	      exit
+	fi
+
+done
+
+echo  "All strings present in include file"
+exit
+	
+return	
+}
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
 set_fantasy_name()
@@ -469,6 +490,8 @@ FANTASY_NAME="${2}"
 basic_checks
 
 determine_os_type
+
+check_include_file
 
 set_fantasy_name
 
