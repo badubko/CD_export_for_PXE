@@ -1,0 +1,1 @@
+/samba/badubko-q/Back_F/BAS/DOCS/CD_export_for_PXE/Support_Matrix/Supported/ubuntu-mate-20.sh
