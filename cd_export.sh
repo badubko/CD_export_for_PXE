@@ -76,7 +76,7 @@ determine_os_type()
 # declare -A SUPPORT_MATRIX
 
 # for OS_TYPE in "${!SUPPORT_MATRIX[@]}"
-echo $RUN_STRING
+# echo $RUN_STRING
 
 SCR_NAME=${RUN_STRING##*/} # Eliminates path name
 PATH_NAME=${RUN_STRING%/*}  # Eliminates file name
@@ -97,9 +97,12 @@ do
 	SUPPORT_STAT=${SUPPORT_STAT^^} 
 	OS_TYPE=${PAIR##*/}   									# Delete everything preceeding "/"
 
- 	OS_TYPE=${OS_TYPE%%.*} 							# Delete ".sh"  that is, everything after OS name...
+#	OS_TYPE=${OS_TYPE%%.*} 							# Delete ".sh"  that is, everything after OS name...
+																				# This is not convinient if the name has several "."'s in it 
+																				
+    OS_TYPE=${OS_TYPE/\.sh/}                 			# So, as we "find" *.sh, it would be safe to delete just this extension 
 	
-	#echo ${SUPPORT_STAT} ${OS}
+#	echo ${PAIR} ${SUPPORT_STAT} ${OS_TYPE}
 
 	# Convert CD_TO_EXPORT to lowercase ( to be reviewed... )
 	
@@ -111,8 +114,9 @@ do
 		
 					STRINGS_DEFS_TO_INCLUDE="${PATH_NAME}/${SUPPORT_MATRIX_DIR}/${PAIR}"
 					MENU_LINES_GENERATION="WRITE_MENU_LINES"
-					echo "OS_TYPE is: ${OS_TYPE}"   "SUPP_STATUS: ${SUPPORT_STAT}"   "	${STRINGS_DEFS_TO_INCLUDE}"
-					# exit 
+					echo "OS_TYPE is: ${OS_TYPE}"   "SUPP_STATUS: ${SUPPORT_STAT}"  
+					echo "Strings to include:	${STRINGS_DEFS_TO_INCLUDE}"
+					#  exit 
 					return
 				;;
 			"DONT_WRITE_MENU_LINES")
